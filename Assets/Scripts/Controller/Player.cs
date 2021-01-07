@@ -20,10 +20,13 @@ public class Player : MonoBehaviour
     {
         input = GetComponent<UserInput>();
         playerState = PlayerState.Locomotion;
-
         cam = Camera.main;
-
         animator = GetComponent<Animator>();
+        SetAnimatorStringsToHash();
+    }
+
+    void SetAnimatorStringsToHash()
+    {
         movingForwardHash = Animator.StringToHash("Forward");
         movingRightHash = Animator.StringToHash("Right");
     }

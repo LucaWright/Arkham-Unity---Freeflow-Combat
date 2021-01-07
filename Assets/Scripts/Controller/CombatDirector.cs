@@ -37,12 +37,12 @@ public class CombatDirector : MonoBehaviour
 
     }
 
-    public static void AddToListLine(AgentAI agent, int oldLine, int currentLine)
+    public static void ChangeLineList(AgentAI agent, int oldLine, int currentLine)
     {
-        agents[currentLine].Add(agent);
         if (oldLine >= 0)
             agents[oldLine].Remove(agent);
-        agent.oldLine = agent.currentLine;
+
+        agents[currentLine].Add(agent);
     }
 
     void InitializeAgentLists()
