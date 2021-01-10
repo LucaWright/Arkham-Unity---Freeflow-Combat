@@ -25,8 +25,17 @@ public class DistanceHandler
         if (Mathf.RoundToInt(distance / firstLineDistance) >= 1) //considerare un floor to int
         {
             distance -= firstLineDistance;
-            return (Mathf.RoundToInt(distance / lineToLineDistance) + 1);
+            return Mathf.Clamp
+                        (Mathf.RoundToInt(distance / lineToLineDistance) + 1,
+                        1,
+                        lines + 1);
         }
         return 0;
+    }
+
+    public float LineDistance(int _line)
+    {
+        if (lines > 1) return firstLineDistance + lineToLineDistance * (_line - 1);
+        return firstLineDistance;
     }
 }

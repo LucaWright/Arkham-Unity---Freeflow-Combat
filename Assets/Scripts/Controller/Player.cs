@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum PlayerState { Locomotion, Strike, Counter}
+
+[SelectionBase]
 public class Player : MonoBehaviour
 {
     UserInput   input;
@@ -14,6 +16,9 @@ public class Player : MonoBehaviour
     int         movingForwardHash;
     int         movingRightHash;
 
+    Transform           rootBone;
+    List<Rigidbody>     bodyParts;
+
     Vector3     movementVector;
 
     private void Awake()
@@ -21,14 +26,27 @@ public class Player : MonoBehaviour
         input = GetComponent<UserInput>();
         playerState = PlayerState.Locomotion;
         cam = Camera.main;
-        animator = GetComponent<Animator>();
-        SetAnimatorStringsToHash();
+        SetAnimator();
+        //SetRagdollRigidBodies();
     }
 
-    void SetAnimatorStringsToHash()
+    void SetAnimator()
     {
+        animator = GetComponent<Animator>();
         movingForwardHash = Animator.StringToHash("Forward");
         movingRightHash = Animator.StringToHash("Right");
+    }
+    void SetRagdollRigidBodies()
+    {
+        bodyParts = new List<Rigidbody>();
+
+        rootBone = animator.GetBoneTransform(HumanBodyBones.Hips);
+        Rigidbody[] bones = rootBone.GetComponentsInChildren<Rigidbody>();
+        foreach (Rigidbody bone in bones)
+        {
+            bodyParts.Add(bone);
+            bone.isKinematic = true;
+        }
     }
 
     private void Update()
@@ -59,6 +77,7 @@ public class Player : MonoBehaviour
                 if (CombatDirector.state == CombatDirectorState.Executing)
                 {
                     //Funzione contrattacco
+                    //Disattiva UI_Counter
                 }
                 else
                 {
@@ -115,5 +134,19 @@ public class Player : MonoBehaviour
     {
         animator.SetFloat(movingForwardHash, 0);
         animator.SetFloat(movingRightHash, 0);
+    }
+
+    public void Stun()
+    {
+        animator.SetTrigger("Stun");
+        CombatDirector.strikers.Clear();
+        //Set animation trigger
+        //Event su animation: riporta il combat director in planning
+    }
+
+    public void OnStunAnimationEvent()
+    {
+        animator.ResetTrigger("Stun");
+        CombatDirector.state = CombatDirectorState.Planning;
     }
 }

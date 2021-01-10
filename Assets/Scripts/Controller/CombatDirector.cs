@@ -68,7 +68,7 @@ public class CombatDirector : MonoBehaviour
                 OnUpdateDispatch();
                 break;
             case CombatDirectorState.Executing:
-                //OnUpdateExecuting();
+                OnUpdateExecuting();
                 break;
             default:
                 break;
@@ -77,7 +77,7 @@ public class CombatDirector : MonoBehaviour
 
     void OnUpdatePlanning()
     {        
-        for (int i = 0; i < agents.Length; i++)
+        for (int i = 1; i < (agents.Length - 1); i++) //escludi line 0 e line LastLine -1
         {
             var elementsCount = agents[i].Count; //anziché prenderli da qui, li prende direttamente da agents?
 
@@ -97,56 +97,47 @@ public class CombatDirector : MonoBehaviour
 
             if (candidates >= randomNumber)
             {
-                for (int j = 0; j < elementsCount; j++)
+                for (int j = 0; j < randomNumber; j++)
                 {
                     var agent = agents[i].ElementAt(0);
                     agents[i].Remove(agent);
                     strikers.Add(agent);
                     //Cambia stato dell'agent!
                     agent.state = AgentState.Dispatching;
+                    agent.DispatchEvent();
                 }
                 state = CombatDirectorState.Dispatching;
             }
+            tick = 0;
             return;
         }
     }
 
     void OnUpdateDispatch()
     {
+        if (AllStrikersReady()) //EVENT
+        {
+            foreach (AgentAI agent in strikers)
+            {
+                agent.Attack();
+                state = CombatDirectorState.Executing;
+                //Set active UI_counter
+            }
+        }
+    }
+
+    void OnUpdateExecuting()
+    {
+        //Non saprei
+        //Magari aspetta segnale di FINE ANIMAZIONE prima di tornare in Planning
+        
+        ////Controlli di sicurezza?
         //if (strikers.Count == 0)
         //{
         //    ReturnToPlanningPhase();
         //    return;
         //}
-
-        //OnUpdateLocomotion();
-
-        //foreach (AIBehavior foe in strikers)
-        //{
-        //    foe.OnAttacking();
-        //}
-
-        //if (AllStrikersReady())
-        //{
-        //    foreach (AIBehavior foe in strikers)
-        //    {
-        //        //attack
-        //        foe.Attack();
-        //        state = DirectorState.Executing;
-        //        foe.state = AIState.Executing;
-        //    }
-        //}
     }
-
-    //void OnUpdateExecuting()
-    //{
-    //    //Controlli di sicurezza?
-    //    if (strikers.Count == 0)
-    //    {
-    //        ReturnToPlanningPhase();
-    //        return;
-    //    }
-    //}
 
 
 
@@ -218,15 +209,14 @@ public class CombatDirector : MonoBehaviour
     //    return -1;
     //}
 
-    //bool AllStrikersReady()
-    //{
-    //    foreach (AIBehavior foe in strikers)
-    //    {
-    //        if (!foe.CanAttack()) return false;
-    //    }
-
-    //    return true;
-    //}
+    bool AllStrikersReady()
+    {
+        foreach (AgentAI agent in strikers)
+        {
+            if (!agent.canAttack) return false;
+        }
+        return true;
+    }
 
     //public void ReturnToPlanningPhase() //valuta una static
     //{

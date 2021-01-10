@@ -8,40 +8,40 @@ using UnityEngine.AI;
 public enum AgentState { Idle, Positioning, Dispatching, Attacking, Retreat, Recover } //Vedere se mettere uno stato di trasferimento da una linea all'altra, che controlla solo se di è giunta la destinazione. Dovrebbe essere una derivata del positioning, però.
 public enum AgentMovementDir { None, Forward, Backward, Right, Left }
 
+[SelectionBase]
 public class AgentAI : MonoBehaviour
 {
-    public AgentState state = AgentState.Idle;
-    public AgentMovementDir movementDir = AgentMovementDir.None;
-    
-    NavMeshAgent agentNM;
-    Rigidbody rb;
-    Animator anim;
-    //triggers
+    public      AgentState          state           = AgentState.Idle;
+    public      AgentMovementDir    movementDir     = AgentMovementDir.None;
+
+    NavMeshAgent    agentNM;
+    Animator        animator;
+    CapsuleCollider capsuleCollider;
+
     int movingIdleHash;
     int movingForwardHash;
     int movingBackwardHash;
     int movingRightHash;
     int movingLeftHash;
+    int runningForwardHash;
 
-    public float positioningEvaluationTime = 3;
+    float idleTimer = 0;
+    float idleTime = 0;
     float positioningTimer = 0;
 
-    public LayerMask raycastLayerMask;
+    public      float       attackRange         =   1.5f;
+    public      LayerMask   raycastLayerMask;
+    public      Vector2     idleTimeMinMax      =   new Vector2(1, 3);
+    public      float       positioningTime     =   1.5f;
 
-    public Transform target;
+    Transform target;
 
-    public GameObject CounterUI;
+    public GameObject UI_counter;
 
-
-    //public int oldLine = -1;
-    public int currentLine = -1;
-    public int nextLine = 1;
-
-    public bool isEvaluatingPosition = false;
-    public bool mustRun = false;
+    public      int         currentLine         =   -1;
+    public      int         destinationLine     =   1;
 
     public bool canAttack = false;
-    public bool isWaitingAttackSignal = false;
 
 
     //vedere le string to hash.
@@ -51,100 +51,86 @@ public class AgentAI : MonoBehaviour
 
     Vector3 rootMotion;
 
-    public Transform rootBone;
-    public List<Rigidbody> bodyParts;
-    int aiBodyPartLayer = -1;
+    Transform rootBone;
+    List<Rigidbody> bodyParts;
 
+    const float referenceAngle = 45f;
+    const float straightAngle = 180f;
 
-    public int comboCounter = 0;
-    bool wantAttack;
-    public bool isAttacking;
+    public ParticlesManager particleManager;
 
     private void Awake()
-    {      
-        agentNM = GetComponent<NavMeshAgent>();
-        rb = GetComponent<Rigidbody>();
-        anim = GetComponent<Animator>();
-        SetAnimatorStringsToHash();
+    {
+        SetNavMeshAgent();
+        SetAnimator();
+        capsuleCollider = GetComponent<CapsuleCollider>();
+
+        UI_counter = Instantiate(UI_counter, animator.GetBoneTransform(HumanBodyBones.Head));
+        SetUICounter(false);
+
+        //SetRagdollRigidBodies();
 
         //CounterUI = Instantiate(CounterUI, anim.GetBoneTransform(HumanBodyBones.Head));
         //SetCounterUI(false);
     }
 
-    void SetAnimatorStringsToHash()
+    void SetNavMeshAgent()
     {
+        agentNM = GetComponent<NavMeshAgent>();
+        agentNM.updateRotation = false;
+        agentNM.stoppingDistance = attackRange;
+    }
+
+    void SetAnimator()
+    {
+        animator = GetComponent<Animator>();
+
         movingIdleHash = Animator.StringToHash("Idle");
         movingForwardHash = Animator.StringToHash("Step Forward");
         movingBackwardHash = Animator.StringToHash("Step Backward");
         movingRightHash = Animator.StringToHash("Step Right");
         movingLeftHash = Animator.StringToHash("Step Left");
+        runningForwardHash = Animator.StringToHash("Run Forward");
+    }
+
+    void SetRagdollRigidBodies()
+    {
+        bodyParts = new List<Rigidbody>();
+
+        rootBone = animator.GetBoneTransform(HumanBodyBones.Hips);
+        Rigidbody[] bones = rootBone.GetComponentsInChildren<Rigidbody>();
+        foreach (Rigidbody bone in bones)
+        {
+            bodyParts.Add(bone);
+            bone.isKinematic = true;
+        }
     }
 
     private void OnEnable()
     {
-        
+
     }
 
     private void Start()
     {
-        agentNM.updateRotation = false;
         target = CombatDirector.DistanceInfo.Target;
         CheckCurrentLine();
     }
 
-    void CheckCurrentLine()
-    {
-        int oldLine = currentLine;
-        currentLine = CombatDirector.DistanceInfo.GetLine(this.transform);
-        if (currentLine != oldLine)
-        {
-            //ChangeList
-            CombatDirector.ChangeLineList(this, oldLine, currentLine);
-        }
-    }
-    
-    bool IsValidLine()
-    {
-        currentLine = CombatDirector.DistanceInfo.GetLine(this.transform);
-
-        if (currentLine == 0)
-        {
-            //Do stuff and return false
-            nextLine = 1;
-            state = AgentState.Retreat;
-            return false;
-        }
-        else
-        if (currentLine > CombatDirector.DistanceInfo.Lines) //Non proprio. Questo risultato può arrivare dopo.
-        {
-            //Do sfuff and return false
-            //> Se è sulla linea LastLine + 1, deve ritornare in posizione. Per farlo, deve usare per forza il navmesh agent e fermarsi quando torna sull'ultima linea.
-            anim.SetBool("Run", true);
-            return false;
-        }
-
-        //Deve necessariamente tornare in Idle?
-        return true;
-    }
-
     private void FixedUpdate()
     {
-        switch (state)
+        //NewHandleMovement();
+        switch (state) //Gli stati come Scriptable Object? Con dei simpatici override? Pensaci per refactoring
         {
             case AgentState.Idle:
-                
                 UpdateOnIdle();
-                //Qui quando tutto è resettato
-                //Check se si può muovere in qualche direzione
                 break;
             case AgentState.Positioning:
-                HandleMovement();
-                HandleRotation();
+                UpdateOnPositioning();
                 //Si sta muovendo e deve verificare se è arrivato alla linea target
                 break;
             case AgentState.Dispatching:
-                HandleMovement();
-                HandleRotation();
+                UpdateOnDispatching();
                 //Sta correndo verso l'obiettivo
                 break;
             case AgentState.Attacking:
@@ -153,8 +139,7 @@ public class AgentAI : MonoBehaviour
                 //Sono tutti in posizione e stanno attaccando
                 break;
             case AgentState.Retreat:
-                HandleMovement();
-                HandleRotation();
+                UpdateOnRetreat();
                 //È alla linea 0 o ha finito di attaccare
                 break;
             case AgentState.Recover:
@@ -167,9 +152,15 @@ public class AgentAI : MonoBehaviour
 
     private void OnAnimatorMove()
     {
-        rootMotion += anim.deltaPosition;
-    }   
+        rootMotion += animator.deltaPosition;
+    }
 
+    Vector3 DistanceToTarget()
+    {
+        return Vector3.ProjectOnPlane(target.position - transform.position, Vector3.up);
+    }
+
+    #region Handle Movement and Rotation
 
     void HandleMovement()
     {
@@ -202,32 +193,208 @@ public class AgentAI : MonoBehaviour
         }
     }
 
-    Vector3 DistanceToTarget()
-    {
-        return Vector3.ProjectOnPlane(target.position - transform.position, Vector3.up);
-    }
+    #endregion
+
+    #region Update Idle State
 
     void UpdateOnIdle()
     {
+        CheckCurrentLine();
         if (!IsValidLine()) return;
 
-        EvaluateMovement(); //Vedere se return type o spostare effetivamente per ultima
         HandleMovement();
         HandleRotation();
-    }
 
-    void UpdateOnPositioning() //Ci sono due modalità: raggiungi la destinazione o continua per tot tempo
-    {        
-        positioningTimer += Time.fixedDeltaTime;
-
-        HandleMovement();
-        HandleRotation();
-        if (positioningTimer >= positioningEvaluationTime)
+        idleTimer += Time.fixedDeltaTime;
+        
+        if (idleTimer > idleTime)
         {
-            positioningTimer = 0;
-            PushToIdle();
+            idleTimer = 0;
+            animator.ResetTrigger(movingIdleHash); //di sicurezza, dato che può entrare qui da idle e da positioning
+            EvaluateMovement(); //Vedere se return type o spostare effetivamente per ultima
         }
     }
+    #endregion
+
+    #region Update Position State
+
+    void UpdateOnPositioning() //Ci sono due modalità: raggiungi la destinazione o continua per tot tempo
+    {
+        CheckCurrentLine();
+        if (!IsValidLine()) return;
+
+        HandleMovement();
+        HandleRotation();
+
+        switch (movementDir) //Gestisce i time?
+        {
+            case AgentMovementDir.None:
+                PushToIdle();
+                break;
+            case AgentMovementDir.Forward:
+                if (agentNM.hasPath)
+                {
+                    if (NavMeshDestinationReached())
+                    {
+                        animator.ResetTrigger(movingForwardHash);
+                        PushToIdle();
+                    }
+                    return;
+                }
+
+                EvaluateMovement();
+                if (currentLine == destinationLine)
+                {
+                    animator.ResetTrigger(movingForwardHash);
+                    PushToIdle();
+                }
+                break;
+            case AgentMovementDir.Backward:
+                //Controlli
+                if (currentLine == destinationLine) //Potrebbe dare problemi col dispatch
+                    PushToIdle();
+                break;
+            //case AgentMovementDir.Right:
+            //    //If timer > maxSideStepTime...
+            //    break;
+            //case AgentMovementDir.Left:
+            //    //If time > maxSideStepTime
+            //    break;
+            default:
+                positioningTimer += Time.fixedDeltaTime;
+
+                if (positioningTimer >= positioningTime)
+                {                    
+                    animator.ResetTrigger(movingRightHash);
+                    animator.ResetTrigger(movingLeftHash);
+                    positioningTimer = 0;
+                    PushToIdle();
+                }
+                break;
+        }
+    }
+    #endregion
+
+    #region Update Dispatching State
+
+    public void UpdateOnDispatching()
+    {
+        HandleMovement();
+        HandleRotation();
+        CheckCurrentLine();
+
+        agentNM.SetDestination(target.position);
+        if (!agentNM.hasPath) return;
+
+
+        if (!NavMeshDestinationReached())
+        {
+            canAttack = false;
+            animator.SetBool("Can Attack", canAttack);
+            return;
+        }
+
+        animator.ResetTrigger(runningForwardHash);
+        animator.SetTrigger("Ready");
+        animator.SetBool("Can Attack", canAttack);
+        movementDir = AgentMovementDir.None;
+        canAttack = true;
+    }
+    #endregion
+
+    #region Attack State
+    public void Attack()
+    {
+        state = AgentState.Attacking;
+        canAttack = false; //LASCIALO A TRUE
+        //canAttack torna a false all'animation Event o quando contrattaccato
+        //In questo modo, possiamo fare degli aggiustamenti di posizione e rotazione durante lo stato attack PRIMA dell'impatto del colpo.
+        isCandidate = false;
+        animator.SetBool("Can Attack", canAttack);
+        animator.ResetTrigger("Ready");
+        CheckCurrentLine();
+        //Debug.Break();
+        animator.SetTrigger("Attack");
+        SetUICounter(true);
+    }
+    #endregion
+
+    #region Update Retrat
+    void UpdateOnRetreat()
+    {
+        CheckCurrentLine();
+        if (currentLine == destinationLine)
+        {
+            PushToIdle();
+        }
+
+        HandleMovement();
+        HandleRotation();
+    }
+    #endregion
+
+    #region Movement Triggers
+    void PushToIdle()
+    {
+        state = AgentState.Idle;
+        movementDir = AgentMovementDir.None;
+        idleTime = Random.Range(idleTimeMinMax.x, idleTimeMinMax.y);
+        animator.SetTrigger(movingIdleHash);
+        //Debug.Break();
+    }
+
+    void PushForward(int _destinationLine)
+    {
+        _destinationLine = destinationLine;
+        if (currentLine > 1)
+        {
+          state = AgentState.Positioning;
+          movementDir = AgentMovementDir.Forward; 
+          //animator.ResetTrigger(movingIdleHash);
+          animator.SetTrigger(movingForwardHash);
+        }
+        //else
+        //{
+        //    PushToIdle();
+        //}
+    }
+    void PushBackward(int _destinationLine)
+    {
+        destinationLine = _destinationLine;
+        state = AgentState.Retreat;
+        movementDir = AgentMovementDir.Backward;
+        animator.ResetTrigger(movingIdleHash);
+        animator.SetTrigger(movingBackwardHash);
+    }
+    void PushRight()
+    {
+        state = AgentState.Positioning;
+        movementDir = AgentMovementDir.Right;
+        animator.ResetTrigger(movingForwardHash);
+        animator.ResetTrigger(movingBackwardHash);
+        animator.SetTrigger(movingRightHash);
+    }
+    void PushLeft()
+    {
+        state = AgentState.Positioning;
+        movementDir = AgentMovementDir.Left;
+        animator.ResetTrigger(movingForwardHash);
+        animator.ResetTrigger(movingBackwardHash);
+        animator.SetTrigger(movingLeftHash);
+    }
+
+    void RunForward(float _stoppingDistance)
+    {
+        agentNM.SetDestination(target.position);
+        agentNM.stoppingDistance = _stoppingDistance;
+
+        //state = AgentState.Dispatching; //Dispatching lo chiama solo l'event! Di base, è positioning
+        state = AgentState.Positioning; //Dispatching lo chiama solo l'event! Di base, è positioning
+        movementDir = AgentMovementDir.Forward;
+        animator.ResetTrigger(movingIdleHash);
+        animator.SetTrigger(runningForwardHash);
+    }
+    #endregion
 
     //Planning!!!
     //CheckSorroundings
@@ -243,73 +410,86 @@ public class AgentAI : MonoBehaviour
     //> Se una delle due condizioni di cui sopra è vera: return. Dunque... Qual è la domanda? Invalid line;
     //> Altrimenti, prosegui
 
+    void CheckCurrentLine()
+    {
+        int oldLine = currentLine;
+        currentLine = CombatDirector.DistanceInfo.GetLine(this.transform);
+        if (currentLine != oldLine)
+        {
+            CombatDirector.ChangeLineList(this, oldLine, currentLine);
+        }
+    }
+
+    bool IsValidLine()
+    {
+        if (currentLine == 0)
+        {
+            PushBackward(1);
+            return false;
+        }
+        else
+        if (currentLine > CombatDirector.DistanceInfo.Lines)
+        {
+            RunForward(CombatDirector.DistanceInfo.LastLineRadius);
+            return false;
+        }
+        //Se torna in idle, fa uno step per volta.
+        return true;
+    }
+
+    bool NavMeshDestinationReached()
+    {
+        //DEBUGGER PATH
+        Debug.DrawRay(transform.position + Vector3.up, agentNM.desiredVelocity, Color.blue);
+        for (int i = 0; i < agentNM.path.corners.Length - 1; i++)
+        {
+            Debug.DrawLine(agentNM.path.corners[i], agentNM.path.corners[i + 1], Color.cyan, 0.02f);
+        }
+
+        //Debug.Log(DistanceToTarget().magnitude);
+
+        if (DistanceToTarget().magnitude > agentNM.stoppingDistance) //cambia stopping distance
+        {
+            return false;
+        }
+        return true;
+    }
+
+    RaycastHit testHit;
+
     public void EvaluateMovement() //Movement, più che position
     {
         //hitInfo?
         RaycastHit hitInfo;
 
+        //Vector3 raycastOrigin = animator.GetBoneTransform(HumanBodyBones.Chest).position;
+        Vector3 raycastOrigin = transform.position + Vector3.up;
+
         //1. SphereCast verso Target > Per vedere se ha strada libera verso il target
-        if (Physics.SphereCast(anim.GetBoneTransform(HumanBodyBones.Chest).position, agentNM.radius, transform.forward, out hitInfo, CombatDirector.DistanceInfo.LastLineRadius, raycastLayerMask)) //lasciare spherecast sulla chest?
+        if (Physics.SphereCast(raycastOrigin, agentNM.radius, transform.forward, out hitInfo, CombatDirector.DistanceInfo.LastLineRadius, raycastLayerMask)) //lasciare spherecast sulla chest?
         {
             var other = hitInfo;
+            testHit = hitInfo;
 
-            switch (other.collider.tag)
+            switch (other.transform.root.tag) //forse va trovata un'altra soluzione. Bisognerebbe avere le reference delle collisioni nell'oggetto padre, no?
             {
                 case "Player":
-                    //Candidato = true;
-                    //Push Forward(destinationLine)
                     isCandidate = true;
-                    PushForward();
+                    PushForward(1);
                     break;
-                case "Enemy":                    
+                case "Foe":
                     isCandidate = false;
                     EvaluatePosition(other);
                     break;
                 default:
-                    //Probabilmente hai hittato qualche altro ostacolo.
-                    //Attiva il navmesh agent e rispozionati fino a quando non torni ad avere davanti o il Player o Enemy
+                    RunForward(CombatDirector.DistanceInfo.LineDistance(currentLine)); //C'è bisogno di una funziona che dia il raggio della linea corrente
                     break;
             }
         }
     }
 
-    void PushToIdle()
-    {
-        state = AgentState.Idle;
-        movementDir = AgentMovementDir.None;
-        anim.SetTrigger(movingIdleHash);
-    }
-
-    void PushForward() //Ha la particolarità che dovrebbe raggiungere la destinazione, però :\
-    {
-        state = AgentState.Positioning;
-        movementDir = AgentMovementDir.Forward;
-        anim.SetTrigger(movingForwardHash);
-    }
-
-    void PushBackward()
-    {
-        state = AgentState.Positioning;
-        movementDir = AgentMovementDir.Backward;
-        anim.SetTrigger(movingBackwardHash);
-    }
-    void PushRight()
-    {
-        state = AgentState.Positioning;
-        movementDir = AgentMovementDir.Right;
-        anim.SetTrigger(movingRightHash);
-    }
-    void PushLeft()
-    {
-        state = AgentState.Positioning;
-        movementDir = AgentMovementDir.Left;
-        anim.SetTrigger(movingLeftHash);
-    }
-
     void EvaluatePosition(RaycastHit other)
     {
-        var distance = Vector3.Distance(transform.position, other.transform.position);
-        var lines = Mathf.RoundToInt(distance / CombatDirector.DistanceInfo.LineToLineDistance);
         //Check distance e controlla se c'è spazio a sufficienza per il passaggio a 1 o più linee successive.
         //Dovresti controllare anche le intenzioni dell'enemy davanti a te.
         //Cosa sta facendo?
@@ -318,32 +498,32 @@ public class AgentAI : MonoBehaviour
         //> Si sta spostando ai lati: aspetta o spostati dalla parte opposta.
         //In caso contrario, SphereCast attorno a te. Controlla a destra, a sinistra.
         //Controlla sempre le intenzioni degli altri, prima di muoverti.
+        var distance = Vector3.Distance(transform.position, other.transform.position);
+        var lines = Mathf.RoundToInt(distance / CombatDirector.DistanceInfo.LineToLineDistance);
         switch (lines)
         {
             case 0:
-                //Valuta destra e sinistra (!canBackward)
+                CheckSurrounding(other.normal, true); //O true, o retreat
                 break;
-            case 1:
-                AgentAI otherAgnetAI = other.transform.GetComponent<AgentAI>();
+            case 1: //Deve sapere le intenzioni degll'altro per capire se deve retrocedere o meno.
+                AgentAI otherAgnetAI = other.transform.root.GetComponent<AgentAI>();
                 AgentMovementDir otherMovementDir = otherAgnetAI.movementDir;
-                if (movementDir == AgentMovementDir.Backward)
+                if (otherMovementDir == AgentMovementDir.Backward)
                 {
-                    //valuta destra, sinistra, dietro (canBackward)
+                    CheckSurrounding(other.normal, true);
                 }
                 else
                 {
-                    nextLine = currentLine - 1;
-                    PushForward(); //TO DESTINATION!!!
+                    CheckSurrounding(other.normal, false);
                 }
-                break;            
+                break;
             default:
-                nextLine = currentLine - (lines - 1);
-                PushForward(); //To destination? Non dovrebbe valutare a ogni step? Mi sa che ci vuole un altro stato \ funzione... Che è lo stato in cui versano i possibili candidati (ma alcuni non lo saranno)
+                PushForward(currentLine - (lines - 1));
                 break;
         }
     }
 
-    void CheckSurrounds(Vector3 normal, bool canBackward)
+    void CheckSurrounding(Vector3 normal, bool canBackward) //Questa funzione è una merda. Va rivista
     {
         //ha bisogno in entrata...
         //LA NORMALE DEL RAYCAST HIT, così sa se deve guardare prima da una parte o dall'altra.
@@ -356,104 +536,117 @@ public class AgentAI : MonoBehaviour
         //Se puoi retrocedere, retrocedi
         //Se non puoi retrocedere, resti in idle (o fai positioning fermo per n secondo per evitare di fare controlli in continuazione? bisogna vedere le prestazioni).
 
-        RaycastHit[] colliders = Physics.SphereCastAll(transform.position, agentNM.radius, Vector3.forward, 0f, raycastLayerMask);
+        capsuleCollider.enabled = false; //Lo spherecast prende anche sé stesso, sennò!
+        RaycastHit[] hits = Physics.SphereCastAll(transform.position, agentNM.radius * 3.5f, Vector3.forward, 0f, raycastLayerMask);
+        capsuleCollider.enabled = true;
 
-        var angle = Vector3.Angle(transform.forward, normal);
+        float normalAngle = Vector3.SignedAngle(transform.forward, normal, Vector3.up);
+        float angleSign = Mathf.Sign(normalAngle);
 
-        if (angle >= 0)
+        bool canGoRight = true;
+        bool canGoLeft = true;
+
+        foreach (RaycastHit hit in hits)
         {
-            //parti da right
+            if (canGoRight || canGoLeft || canBackward)
+            {
+                Vector3 evaluatedDir = hit.transform.position - transform.position;
+                float evaluatedAngle = Vector3.SignedAngle(angleSign * transform.right, evaluatedDir, Vector3.up); //Senso orario = positivo
+
+                if (Mathf.Abs(evaluatedAngle) < referenceAngle / 2f)
+                {
+                    canGoRight = false;
+                }
+                else
+                if (Mathf.Abs(evaluatedAngle) > straightAngle - (referenceAngle / 2f))
+                {
+                    canGoLeft = false;
+                }
+                else
+                if (angleSign * referenceAngle / 2f <= evaluatedAngle && evaluatedAngle <= angleSign * straightAngle - (referenceAngle / 2f))
+                {
+                    canBackward = false;
+                }
+            }
+            else
+            {
+                PushToIdle();
+                return;
+            }
+        }
+
+        if (angleSign > 0)
+        {
+            if (canGoRight)
+            {
+                PushRight();
+                return;
+            }
+            else
+            if (canGoLeft)
+            {
+                PushLeft();
+                return;
+            }
         }
         else
         {
-            //parti da left
+            if (canGoLeft)
+            {
+                PushLeft();
+                return;
+            }
+            else
+            if (canGoRight)
+            {
+                PushRight();
+                return;
+            }
         }
-    }
-
-    void PositioningController()
-    {
-        currentLine = CombatDirector.DistanceInfo.GetLine(transform);
-        if (currentLine == nextLine)
+        if (canBackward)
         {
-            //DoStuff;
-            state = AgentState.Idle;
+            PushBackward(currentLine + 1); //meglio metterla come parametro del metodo? In questo modo, si è sicuri di non dimenticare mai di settare la destinazione
         }
     }
 
-    public void Dispatch()
+    public void DispatchEvent() //Chiamata dal combat director, come un event
     {
-        ResetAnimationBools();
-        anim.SetTrigger("RunTowardsTarget");
+        RunForward(attackRange);
+        //Override Active Animator Triggers
+        animator.ResetTrigger(movingForwardHash);
+        animator.ResetTrigger(runningForwardHash);
+        //Set Dispatch state
         state = AgentState.Dispatching;
+        destinationLine = 0;
+        animator.SetTrigger("Dispatch");
     }
 
-    public void OnAttacking() //trasformarla in bool?
+    public void OnAttackAnimationEvent()
     {
-        if (canAttack) return;
+        agentNM.ResetPath();
 
-        agentNM.SetDestination(target.position);
-
-        if (!agentNM.hasPath) return; //magari con !isPathPending. Solo dopo si può usare remainingDistance.
-
-        Debug.DrawRay(transform.position + Vector3.up, agentNM.desiredVelocity * 5, Color.green);
-
-        for (int i = 0; i < agentNM.path.corners.Length - 1; i++)
+        RaycastHit hitInfo;
+        if (Physics.Raycast(transform.position + Vector3.up, transform.forward, out hitInfo, attackRange))
         {
-            Debug.DrawLine(agentNM.path.corners[i], agentNM.path.corners[i + 1], Color.cyan, 0.02f);
+            target.GetComponent<Player>().Stun();
+
+            particleManager.OnPlayerHit(hitInfo.point);
         }
-
-        if (DistanceToTarget().magnitude > agentNM.stoppingDistance) return;
-
-        anim.SetTrigger("InPlace");
-        ResetAnimationBools();
-
-        canAttack = true;
+        SetUICounter(false);
+        PushToIdle();
     }
 
-    public void ResetAnimationBools()
+    
+
+    public void SetUICounter(bool _bool)
     {
-        anim.SetBool("StepForward", false);
-        anim.SetBool("StepLeft", false);
-        anim.SetBool("StepRight", false);
-        anim.SetBool("StepBack", false);
+        UI_counter.SetActive(_bool);
     }
 
-    public bool CanAttack()
+    public void ResetNavMeshPath()
     {
-        return canAttack;
+        agentNM.ResetPath();
     }
-
-    public void Attack()
-    {
-        anim.ResetTrigger("InPlace");
-        anim.ResetTrigger("RunTowardsTarget");
-        anim.SetTrigger("Attack");
-        ResetAnimationBools();
-        canAttack = false;
-        //SetCounterUI(true);
-    }
-
-    //public void Recoil()
-    //{
-    //    //agentNM.ResetPath();
-    //    //currentLine = distanceHandler.GetLine(DistanceToTarget().magnitude);
-
-    //    //if (currentLine < 1)
-    //    //{
-    //    //    anim.SetBool("StepBack", true);
-    //    //}
-    //    //else
-    //    //{
-    //    //    ResetAnimationBools();
-    //    //    director.recoilState.Remove(this);
-    //    //    director.idleState[currentLine].Add(this);
-    //    //}
-    //}
-
-    //public void SetCounterUI(bool inputBool)
-    //{
-    //    CounterUI.SetActive(inputBool);
-    //}
 
     //public void GetStunned(Vector3 force) //DISATTIVARE COLLIDER!
     //{
@@ -509,26 +702,13 @@ public class AgentAI : MonoBehaviour
     //    }
     //}
 
-    //public void ReturnToIdleState() //ANIMATION EVENT
-    //{
-    //    state = AgentState.Idle;
-    //    director.recoverState.Remove(this);
-    //    director.idleState[GetCurrentLine()].Add(this);
-    //    rb.isKinematic = true;
-
-    //    //director.IdleListDebugger();
-    //}
-
-    //public void StopLocomotion()
-    //{
-    //    //agent.isStopped = true;
-    //    anim.SetTrigger("Stop");
-    //    agentNM.ResetPath();
-    //    state = AgentState.Idle;
-    //    director.FindListState(this).Remove(this);
-    //    director.recoilState.Add(this);
-    //}
-
-
-
+    private void OnDrawGizmos()
+    {
+        if (testHit.transform != null)
+        {
+            Gizmos.DrawRay(transform.position + Vector3.up, transform.forward * testHit.distance);
+            Gizmos.DrawWireSphere(transform.position + Vector3.up + transform.forward * testHit.distance, agentNM.radius);
+        }
+        
+    }
 }
