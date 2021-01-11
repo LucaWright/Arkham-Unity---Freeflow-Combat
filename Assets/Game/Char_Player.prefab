@@ -175,8 +175,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerState: 0
-  rootBone: {fileID: 0}
-  bodyParts: []
+  attackDuration: 0.75
+  jumpEase: 1
+  raycastMask:
+    serializedVersion: 2
+    m_Bits: 256
 --- !u!136 &1163666189315361561
 CapsuleCollider:
   m_ObjectHideFlags: 0

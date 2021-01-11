@@ -63,6 +63,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\CounterEndState.cs" />
     <Compile Include="Assets\Game\PlayerInput.cs" />
     <Compile Include="Assets\Scripts\BillboardBehavior.cs" />
     <Compile Include="Assets\Scripts\Controller\AgentAI.cs" />
@@ -74,6 +75,7 @@
     <Compile Include="Assets\Scripts\Controller\State.cs" />
     <Compile Include="Assets\Scripts\Controller\StateMachine.cs" />
     <Compile Include="Assets\Scripts\Controller\UserInput.cs" />
+    <Compile Include="Assets\Scripts\FOWeditor.cs" />
     <Compile Include="Assets\Scripts\ParticlesManager.cs" />
     <Reference Include="UnityEngine">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.3.4f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
@@ -257,6 +259,9 @@
     </Reference>
     <Reference Include="UnityEditor">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.3.4f1/Editor/Data/Managed/UnityEditor.dll</HintPath>
+    </Reference>
+    <Reference Include="DOTween">
+      <HintPath>C:/Users/Luca Wright/Documents/Arkham Unity - Freeflow Combat/Assets/Plugins/Demigiant/DOTween/DOTween.dll</HintPath>
     </Reference>
     <Reference Include="clipper_library">
       <HintPath>C:/Users/Luca Wright/Documents/Arkham Unity - Freeflow Combat/Library/PackageCache/com.unity.cinemachine@2.7.1/Runtime/ThirdParty/clipper_library.dll</HintPath>
@@ -624,8 +629,17 @@
     <Reference Include="Unity.VSCode.Editor">
       <HintPath>C:/Users/Luca Wright/Documents/Arkham Unity - Freeflow Combat/Library/ScriptAssemblies/Unity.VSCode.Editor.dll</HintPath>
     </Reference>
+    <Reference Include="Unity.ProBuilder">
+      <HintPath>C:/Users/Luca Wright/Documents/Arkham Unity - Freeflow Combat/Library/ScriptAssemblies/Unity.ProBuilder.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.InputSystem">
       <HintPath>C:/Users/Luca Wright/Documents/Arkham Unity - Freeflow Combat/Library/ScriptAssemblies/Unity.InputSystem.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.ProBuilder.Editor">
+      <HintPath>C:/Users/Luca Wright/Documents/Arkham Unity - Freeflow Combat/Library/ScriptAssemblies/Unity.ProBuilder.Editor.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.ProBuilder.AssetIdRemapUtility">
+      <HintPath>C:/Users/Luca Wright/Documents/Arkham Unity - Freeflow Combat/Library/ScriptAssemblies/Unity.ProBuilder.AssetIdRemapUtility.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro.Editor">
       <HintPath>C:/Users/Luca Wright/Documents/Arkham Unity - Freeflow Combat/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
@@ -644,6 +658,9 @@
     </Reference>
     <Reference Include="com.unity.cinemachine.editor">
       <HintPath>C:/Users/Luca Wright/Documents/Arkham Unity - Freeflow Combat/Library/ScriptAssemblies/com.unity.cinemachine.editor.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.ProBuilder.AddOns.Editor">
+      <HintPath>C:/Users/Luca Wright/Documents/Arkham Unity - Freeflow Combat/Library/ScriptAssemblies/Unity.ProBuilder.AddOns.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>C:/Users/Luca Wright/Documents/Arkham Unity - Freeflow Combat/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>

@@ -37,6 +37,7 @@ public class UserInput : MonoBehaviour
             //default:
             //    break;
         }
+        //westButton = context.ReadValueAsButton();
     }
 
     public void OnCounter(InputAction.CallbackContext context)

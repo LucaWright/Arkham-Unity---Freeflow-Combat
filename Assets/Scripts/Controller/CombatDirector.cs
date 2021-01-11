@@ -8,6 +8,9 @@ public class CombatDirector : MonoBehaviour
 {
     public static CombatDirectorState state = CombatDirectorState.Planning;
 
+    public string combatState = "";
+    public int maxEnemyCount = 3;
+
     [SerializeField] DistanceHandler distanceHandler = new DistanceHandler();
     
     public static DistanceHandler DistanceInfo;
@@ -17,8 +20,8 @@ public class CombatDirector : MonoBehaviour
     public static List<AgentAI> strikers;
 
 
-    float tick;
-    public float checkEachXSeconds = 0.5f;
+    //float tick;
+    //public float checkEachXSeconds = 0.5f;
 
     private void Awake()
     {
@@ -35,6 +38,26 @@ public class CombatDirector : MonoBehaviour
     private void Start()
     {
 
+    }
+    private void FixedUpdate()
+    {
+        switch (state)
+        {
+            case CombatDirectorState.Planning:
+                combatState = "Planning";
+                OnUpdatePlanning();
+                break;
+            case CombatDirectorState.Dispatching:
+                combatState = "Dispatching";
+                OnUpdateDispatch();
+                break;
+            case CombatDirectorState.Executing:
+                combatState = "Executing";
+                OnUpdateExecuting();
+                break;
+            default:
+                break;
+        }
     }
 
     public static void ChangeLineList(AgentAI agent, int oldLine, int currentLine)
@@ -55,25 +78,6 @@ public class CombatDirector : MonoBehaviour
         }
     }
 
-    private void FixedUpdate()
-    {
-        tick += Time.fixedDeltaTime;
-
-        switch (state)
-        {
-            case CombatDirectorState.Planning:
-                OnUpdatePlanning();
-                break;
-            case CombatDirectorState.Dispatching:
-                OnUpdateDispatch();
-                break;
-            case CombatDirectorState.Executing:
-                OnUpdateExecuting();
-                break;
-            default:
-                break;
-        }
-    }
 
     void OnUpdatePlanning()
     {        
@@ -83,9 +87,9 @@ public class CombatDirector : MonoBehaviour
 
             if (elementsCount == 0) continue;
 
-            var randomNumber = Random.Range(0, Mathf.Clamp(elementsCount, 1, 3)); //Pesca un numer da 0 a 3
+            var randomNumber = Random.Range(1, Mathf.Clamp(elementsCount, 2, maxEnemyCount)); //Pesca un numer da 0 a 3
 
-            if (randomNumber == 0) continue; //Se è zero, ricomincia il ciclo;
+            //if (randomNumber == 0) continue; //Se è zero, ricomincia il ciclo;
 
             int candidates = 0;
 
@@ -100,7 +104,7 @@ public class CombatDirector : MonoBehaviour
                 for (int j = 0; j < randomNumber; j++)
                 {
                     var agent = agents[i].ElementAt(0);
-                    agents[i].Remove(agent);
+                    //agents[i].Remove(agent);
                     strikers.Add(agent);
                     //Cambia stato dell'agent!
                     agent.state = AgentState.Dispatching;
@@ -108,7 +112,6 @@ public class CombatDirector : MonoBehaviour
                 }
                 state = CombatDirectorState.Dispatching;
             }
-            tick = 0;
             return;
         }
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -14,9 +15,12 @@ public class AgentAI : MonoBehaviour
     public      AgentState          state           = AgentState.Idle;
     public      AgentMovementDir    movementDir     = AgentMovementDir.None;
 
+    //Rigidbody       sphereRigidbody;
+    Rigidbody       chestRigidbody;
     NavMeshAgent    agentNM;
     Animator        animator;
-    CapsuleCollider capsuleCollider;
+    //CapsuleCollider capsuleCollider;
+    SphereCollider avoidanceCollider;
 
     int movingIdleHash;
     int movingForwardHash;
@@ -28,11 +32,13 @@ public class AgentAI : MonoBehaviour
     float idleTimer = 0;
     float idleTime = 0;
     float positioningTimer = 0;
+    float stunTimer = 0;
 
     public      float       attackRange         =   1.5f;
     public      LayerMask   raycastLayerMask;
     public      Vector2     idleTimeMinMax      =   new Vector2(1, 3);
     public      float       positioningTime     =   1.5f;
+    public      float       stunTime            =   2f;
 
     Transform target;
 
@@ -52,23 +58,27 @@ public class AgentAI : MonoBehaviour
     Vector3 rootMotion;
 
     Transform rootBone;
-    List<Rigidbody> bodyParts;
+    List<Rigidbody> ragdollBodyParts;
 
     const float referenceAngle = 45f;
     const float straightAngle = 180f;
 
     public ParticlesManager particleManager;
+    public GameObject distorsionFX;
+    public ParticleSystem hitFX;
 
     private void Awake()
     {
+        //SetRigidBody();
         SetNavMeshAgent();
         SetAnimator();
-        capsuleCollider = GetComponent<CapsuleCollider>();
+        //capsuleCollider = GetComponent<CapsuleCollider>();
+        SetAvoidanceCollider();
 
         UI_counter = Instantiate(UI_counter, animator.GetBoneTransform(HumanBodyBones.Head));
         SetUICounter(false);
 
-        //SetRagdollRigidBodies();
+        SetRagdollRigidBodies();
 
         //CounterUI = Instantiate(CounterUI, anim.GetBoneTransform(HumanBodyBones.Head));
         //SetCounterUI(false);
@@ -93,17 +103,26 @@ public class AgentAI : MonoBehaviour
         runningForwardHash = Animator.StringToHash("Run Forward");
     }
 
+    void SetAvoidanceCollider()
+    {
+        avoidanceCollider = GetComponent<SphereCollider>();
+        avoidanceCollider.radius = agentNM.radius;
+    }
+
     void SetRagdollRigidBodies()
     {
-        bodyParts = new List<Rigidbody>();
+        ragdollBodyParts = new List<Rigidbody>();
 
         rootBone = animator.GetBoneTransform(HumanBodyBones.Hips);
+        chestRigidbody = animator.GetBoneTransform(HumanBodyBones.Chest).GetComponent<Rigidbody>();
+
         Rigidbody[] bones = rootBone.GetComponentsInChildren<Rigidbody>();
         foreach (Rigidbody bone in bones)
         {
-            bodyParts.Add(bone);
+            ragdollBodyParts.Add(bone);
             bone.isKinematic = true;
         }
+
     }
 
     private void OnEnable()
@@ -115,6 +134,11 @@ public class AgentAI : MonoBehaviour
     {
         target = CombatDirector.DistanceInfo.Target;
         CheckCurrentLine();
+        ////TestRigidBody
+        //rigidbody.AddForce(((transform.position - target.position).normalized + Vector3.up * .1f) * 70f, ForceMode.Impulse);
+        //state = AgentState.Recover;
+        //agentNM.enabled = false;
+        //animator.SetTrigger("Stunned");
     }
 
     private void FixedUpdate()
@@ -144,6 +168,7 @@ public class AgentAI : MonoBehaviour
                 break;
             case AgentState.Recover:
                 //è a terra e deve rialzarsi
+                OnUpdateRecover();
                 break;
             default:
                 break;
@@ -332,6 +357,55 @@ public class AgentAI : MonoBehaviour
         HandleRotation();
     }
     #endregion
+
+    #region Update Recover
+    void OnUpdateRecover() //Funzionicchia
+    {
+        stunTimer += Time.fixedDeltaTime;
+        if (stunTimer >= stunTime)
+        {
+            //Debug.Break();
+            if (agentNM.isActiveAndEnabled)
+            {
+                HandleMovement();
+            }
+            else
+            {
+                EvaluateForward();
+                transform.position = rootBone.position;
+                transform.rotation = rootBone.rotation;
+                SetRagdollKinematicRigidbody(true);
+                animator.enabled = true;
+                //animator.Rebind();
+                agentNM.enabled = true;
+                avoidanceCollider.enabled = true;
+                animator.SetTrigger("Getting Up");
+            }
+        }
+    }
+    #endregion
+
+    void SetRagdollKinematicRigidbody(bool boolean)
+    {
+        foreach (Rigidbody body in ragdollBodyParts)
+        {
+            body.isKinematic = boolean;
+        }
+    }
+
+    void EvaluateForward()
+    {
+        if (rootBone.forward.y >= 0)
+        {
+            animator.SetTrigger("From Back");
+            rootBone.rotation.SetLookRotation(Vector3.up);
+        }
+        else
+        {
+            animator.SetTrigger("From Front");
+            rootBone.rotation.SetLookRotation(Vector3.down);
+        }
+    }
 
     #region Movement Triggers
     void PushToIdle()
@@ -536,9 +610,9 @@ public class AgentAI : MonoBehaviour
         //Se puoi retrocedere, retrocedi
         //Se non puoi retrocedere, resti in idle (o fai positioning fermo per n secondo per evitare di fare controlli in continuazione? bisogna vedere le prestazioni).
 
-        capsuleCollider.enabled = false; //Lo spherecast prende anche sé stesso, sennò!
+        avoidanceCollider.enabled = false; //Lo spherecast prende anche sé stesso, sennò!
         RaycastHit[] hits = Physics.SphereCastAll(transform.position, agentNM.radius * 3.5f, Vector3.forward, 0f, raycastLayerMask);
-        capsuleCollider.enabled = true;
+        avoidanceCollider.enabled = true;
 
         float normalAngle = Vector3.SignedAngle(transform.forward, normal, Vector3.up);
         float angleSign = Mathf.Sign(normalAngle);
@@ -636,16 +710,62 @@ public class AgentAI : MonoBehaviour
         PushToIdle();
     }
 
+    public void Stun()
+    {
+        animator.SetTrigger("Stunned");
+    }
+
     
 
-    public void SetUICounter(bool _bool)
+    public void SetUICounter(bool boolean)
     {
-        UI_counter.SetActive(_bool);
+        UI_counter.SetActive(boolean);
     }
 
     public void ResetNavMeshPath()
     {
         agentNM.ResetPath();
+    }
+
+    public void Hit() //Passare la forza!
+    {
+        avoidanceCollider.enabled = false;        
+        agentNM.enabled = false;
+        animator.enabled = false;
+        if (CombatDirector.strikers.Contains(this))
+        {
+            CombatDirector.strikers.Remove(this);
+            SetUICounter(false);
+        }
+        if (CombatDirector.strikers.Count == 0)
+        {
+            CombatDirector.state = CombatDirectorState.Planning;
+        }
+        //Attiva i rigidbody della ragdoll
+        SetRagdollKinematicRigidbody(false);
+        chestRigidbody.AddForce(((transform.position - target.position).normalized + Vector3.up * .1f) * 70f, ForceMode.Impulse);
+        StartCoroutine(TestFX());
+        Instantiate(distorsionFX.gameObject, chestRigidbody.transform);
+        stunTimer = 0;
+        state = AgentState.Recover;
+    }
+
+    IEnumerator TestFX()
+    {
+        distorsionFX.SetActive(true);
+        distorsionFX.transform.position = chestRigidbody.transform.position;
+
+        float timer = 0;
+        distorsionFX.transform.localScale = new Vector3(.5f, .5f, .5f);
+
+        while (timer < 1f)
+        {
+            timer += Time.fixedDeltaTime;
+            distorsionFX.transform.localScale *= .1f;
+            yield return new WaitForFixedUpdate();
+        }
+
+        distorsionFX.SetActive(false);
     }
 
     //public void GetStunned(Vector3 force) //DISATTIVARE COLLIDER!
