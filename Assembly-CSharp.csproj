@@ -63,20 +63,33 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\CounterEndState.cs" />
     <Compile Include="Assets\Game\PlayerInput.cs" />
     <Compile Include="Assets\Scripts\BillboardBehavior.cs" />
+    <Compile Include="Assets\Scripts\Controller\AI States\AIAttacking.cs" />
+    <Compile Include="Assets\Scripts\Controller\AI States\AIDispatching.cs" />
+    <Compile Include="Assets\Scripts\Controller\AI States\AIIdle.cs" />
+    <Compile Include="Assets\Scripts\Controller\AI States\AIOnHit.cs" />
+    <Compile Include="Assets\Scripts\Controller\AI States\AIOnStun.cs" />
+    <Compile Include="Assets\Scripts\Controller\AI States\AIPositioning.cs" />
+    <Compile Include="Assets\Scripts\Controller\AI States\AIRecover.cs" />
+    <Compile Include="Assets\Scripts\Controller\AI States\AIRetrat.cs" />
     <Compile Include="Assets\Scripts\Controller\AgentAI.cs" />
-    <Compile Include="Assets\Scripts\Controller\CharacterController.cs" />
     <Compile Include="Assets\Scripts\Controller\CombatDirector.cs" />
     <Compile Include="Assets\Scripts\Controller\DistanceHandler.cs" />
+    <Compile Include="Assets\Scripts\Controller\Player States\PlayerCombat.cs" />
+    <Compile Include="Assets\Scripts\Controller\Player States\PlayerCombatCounter.cs" />
+    <Compile Include="Assets\Scripts\Controller\Player States\PlayerCombatStrike.cs" />
+    <Compile Include="Assets\Scripts\Controller\Player States\PlayerHit.cs" />
+    <Compile Include="Assets\Scripts\Controller\Player States\PlayerLocomotion.cs" />
     <Compile Include="Assets\Scripts\Controller\Player.cs" />
-    <Compile Include="Assets\Scripts\Controller\PlayerLocomotionState.cs" />
     <Compile Include="Assets\Scripts\Controller\State.cs" />
     <Compile Include="Assets\Scripts\Controller\StateMachine.cs" />
     <Compile Include="Assets\Scripts\Controller\UserInput.cs" />
+    <Compile Include="Assets\Scripts\DistorsionVFX.cs" />
     <Compile Include="Assets\Scripts\FOWeditor.cs" />
     <Compile Include="Assets\Scripts\ParticlesManager.cs" />
+    <Compile Include="Assets\Scripts\RagdollSnapshot.cs" />
+    <Compile Include="Assets\Scripts\VFXbuffer.cs" />
     <Reference Include="UnityEngine">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.3.4f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>

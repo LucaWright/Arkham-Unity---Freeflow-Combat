@@ -11822,12 +11822,4 @@ AnimationClip:
   m_EulerEditorCurves: []
   m_HasGenericRootTransform: 0
   m_HasMotionFloatCurves: 0
-  m_Events:
-  - time: 0.8
-    functionName: CounterEndedAnimationEvent
-    data: 
-    objectReferenceParameter: {fileID: 1163666189315361562, guid: 2e27a5da2fbbc0a498a496d843d1e719,
-      type: 3}
-    floatParameter: 0
-    intParameter: 0
-    messageOptions: 0
+  m_Events: []

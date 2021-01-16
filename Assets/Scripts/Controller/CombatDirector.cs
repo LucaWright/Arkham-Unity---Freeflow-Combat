@@ -16,12 +16,8 @@ public class CombatDirector : MonoBehaviour
     public static DistanceHandler DistanceInfo;
     
     static List<AgentAI>[] agents; //prima... li prende tutti. Poi li mette in una lista separata per linea. Questi sono i nemici in Idle
-    public static Queue<AgentAI>[] attackingCandidates; //Solo linee disponibili! E se mi convenisse sempre fare una lista, in modo tale da eliminare chi mi pare?
+    static List<AgentAI>[] strikersCandidates; //Solo linee disponibili! E se mi convenisse sempre fare una lista, in modo tale da eliminare chi mi pare?
     public static List<AgentAI> strikers;
-
-
-    //float tick;
-    //public float checkEachXSeconds = 0.5f;
 
     private void Awake()
     {
@@ -32,18 +28,26 @@ public class CombatDirector : MonoBehaviour
     private void OnEnable()
     {
         InitializeAgentLists();
+        InitializeCandidatesLists();
         strikers = new List<AgentAI>();
     }
 
     private void Start()
     {
-
+        //SetAgentsPriorityOrder();
     }
-    private void FixedUpdate()
+    private void FixedUpdate() // Una coroutine che chiama le funzioni ogni fixed update e poi... Wait next frame!
     {
+        StartCoroutine(Tick());
+    }
+
+    IEnumerator Tick()
+    {
+        yield return new WaitForEndOfFrame();
+        
         switch (state)
         {
-            case CombatDirectorState.Planning:
+            case CombatDirectorState.Planning: //Assegna tempistiche diverse al timere di Idle in base a posizionamento!
                 combatState = "Planning";
                 OnUpdatePlanning();
                 break;
@@ -60,12 +64,107 @@ public class CombatDirector : MonoBehaviour
         }
     }
 
+    void OnUpdatePlanning()
+    {
+        LookForCandidates();
+        PlanAttack();
+        ClearCandidatesLists();
+    }
+
+    void LookForCandidates()
+    {
+        for (int i = 1; i < (agents.Length - 1); i++)
+        {
+            foreach (AgentAI agent in agents[i].ToList())
+            {
+                if (agent.state == AgentState.Idle ||
+                    agent.state == AgentState.Positioning)
+                {
+                    RaycastHit? hit = CheckAgentPath(agent);
+                    if (hit.HasValue)
+                    {
+                        var hitInfo = (RaycastHit)hit;
+
+                        if (hitInfo.transform.tag == "Player")
+                        {
+                            AddToStrikersCandidateList(agent, i);
+                        }
+                    }
+                }                
+            }
+        }
+    }
+
+    void PlanAttack()
+    {
+        var randomNumber = Random.Range(1, maxEnemyCount + 1);
+        //Debug.Log(randomNumber);
+
+        for (int i = randomNumber; i > 0; i--)
+        {
+            for (int j = 0; j < strikersCandidates.Length; j++)
+            {
+                var candidates = strikersCandidates[j];
+                Debug.Log("Su linea " + (j+1) + " ci sono " + candidates.Count + " candidati.");
+                if (candidates.Count < i) continue;
+
+                for (int k = 0; k < i; k++)
+                {
+                    var candidate = candidates.ElementAt(k);
+                    strikers.Add(candidate);
+                    //candidate.RunForward(candidate.attackRange);
+                    candidate.fsm.State = candidate.dispatchingState;
+                }
+                state = CombatDirectorState.Dispatching;
+                return;
+            }
+        }
+    }
+
+    public RaycastHit? CheckAgentPath(AgentAI agent)
+    {
+        Vector3 raycastOrigin = agent.transform.position + Vector3.up;
+        RaycastHit hitInfo;
+        if (Physics.SphereCast(raycastOrigin, agent.agentNM.radius, agent.transform.forward, out hitInfo, CombatDirector.DistanceInfo.LastLineRadius, agent.agentLM))
+        {
+            return hitInfo;
+        }
+        return null;
+    }
+
     public static void ChangeLineList(AgentAI agent, int oldLine, int currentLine)
     {
         if (oldLine >= 0)
             agents[oldLine].Remove(agent);
 
         agents[currentLine].Add(agent);
+    }
+
+    public static void AddToStrikersCandidateList(AgentAI agent, int currentLine)
+    {
+        strikersCandidates[currentLine - 1].Add(agent);
+    }
+
+    void ClearCandidatesLists()
+    {
+        for (int i = 0; i < strikersCandidates.Length; i++)
+        {
+            strikersCandidates[i].Clear();
+        }
+    }
+
+    void SetAgentsPriorityOrder()
+    {
+        int timeStepDelta = 0;
+        
+        for (int i = 1; i < agents.Length; i++)
+        {
+            foreach (AgentAI agent in agents[i].ToList())
+            {
+                timeStepDelta++;
+                agent.idleState.priority = timeStepDelta;
+            }
+        }
     }
 
     void InitializeAgentLists()
@@ -78,53 +177,27 @@ public class CombatDirector : MonoBehaviour
         }
     }
 
+    void InitializeCandidatesLists()
+    {
+        strikersCandidates = new List<AgentAI>[distanceHandler.Lines];
 
-    void OnUpdatePlanning()
-    {        
-        for (int i = 1; i < (agents.Length - 1); i++) //escludi line 0 e line LastLine -1
+        for (int i = 0; i < strikersCandidates.Length; i++) //Inizializza ogni singola lista negli array
         {
-            var elementsCount = agents[i].Count; //anziché prenderli da qui, li prende direttamente da agents?
-
-            if (elementsCount == 0) continue;
-
-            var randomNumber = Random.Range(1, Mathf.Clamp(elementsCount, 2, maxEnemyCount)); //Pesca un numer da 0 a 3
-
-            //if (randomNumber == 0) continue; //Se è zero, ricomincia il ciclo;
-
-            int candidates = 0;
-
-            foreach(AgentAI agent in agents[i].ToList()) //C'è questa funzione in più, che cicla e controlla i candidati per ogni lista su ogni linea
-            {
-                if (agent.isCandidate)
-                    candidates += 1;
-            }
-
-            if (candidates >= randomNumber)
-            {
-                for (int j = 0; j < randomNumber; j++)
-                {
-                    var agent = agents[i].ElementAt(0);
-                    //agents[i].Remove(agent);
-                    strikers.Add(agent);
-                    //Cambia stato dell'agent!
-                    agent.state = AgentState.Dispatching;
-                    agent.DispatchEvent();
-                }
-                state = CombatDirectorState.Dispatching;
-            }
-            return;
+            strikersCandidates[i] = new List<AgentAI>();
         }
     }
+
+
+    
 
     void OnUpdateDispatch()
     {
         if (AllStrikersReady()) //EVENT
         {
+            state = CombatDirectorState.Executing;
             foreach (AgentAI agent in strikers)
             {
-                agent.Attack();
-                state = CombatDirectorState.Executing;
-                //Set active UI_counter
+                agent.fsm.State = agent.attackingState;
             }
         }
     }
