@@ -42,7 +42,6 @@ public class AIAttacking : State
         base.OnEnter();
         agentAI.state = AgentState.Attacking;
         agentAI.canAttack = false; //Può farlo in uscita del dispatching
-        agentAI.isCandidate = false; //Idem come sopra
 
         //reset trigger di sicurezza
         agentAI.animator.SetBool("Can Attack", agentAI.canAttack);
@@ -81,12 +80,14 @@ public class AIAttacking : State
         SetUICounterActive(false);
         //agentAI.BackToIdle(); //Ce n'è davvero bisogno? Va in Idle (animzione) automaticamente. A MENO CHE NON INSERISCA STATO VUOTO. IN QUEL CASO, SERVE ECCOME!
         //fsm.State = agentAI.idleState;
+        CombatDirector.strikers.Remove(agentAI);
         StartCoroutine(agentAI.BackToIdle1());
     }
 
     public override void OnExit()
     {
         base.OnExit();
+        
         agentAI.animator.ResetTrigger(agentAI.idleHash);
     }
 

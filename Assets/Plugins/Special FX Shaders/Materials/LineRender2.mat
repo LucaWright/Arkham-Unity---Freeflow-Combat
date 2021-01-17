@@ -192,7 +192,7 @@ Material:
     - _Tile3: {r: 1, g: 1, b: 0, a: 0}
     - _TileDs: {r: 10, g: 3, b: 0, a: 0}
     - _Tint: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-    - _TintColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.3764706}
+    - _TintColor: {r: 0.7607844, g: 0.7607844, b: 0.7607844, a: 0.3764706}
     - _aPanDsl: {r: 0, g: 0, b: 0, a: 0}
     - _aRotDsl: {r: 0.5, g: 0.5, b: 0, a: 0}
     - _aTileDsl: {r: 1, g: 1, b: 0, a: 0}

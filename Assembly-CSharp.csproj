@@ -79,8 +79,8 @@
     <Compile Include="Assets\Scripts\Controller\Player States\PlayerCombat.cs" />
     <Compile Include="Assets\Scripts\Controller\Player States\PlayerCombatCounter.cs" />
     <Compile Include="Assets\Scripts\Controller\Player States\PlayerCombatStrike.cs" />
-    <Compile Include="Assets\Scripts\Controller\Player States\PlayerHit.cs" />
     <Compile Include="Assets\Scripts\Controller\Player States\PlayerLocomotion.cs" />
+    <Compile Include="Assets\Scripts\Controller\Player States\PlayerOnHit.cs" />
     <Compile Include="Assets\Scripts\Controller\Player.cs" />
     <Compile Include="Assets\Scripts\Controller\State.cs" />
     <Compile Include="Assets\Scripts\Controller\StateMachine.cs" />
@@ -90,6 +90,7 @@
     <Compile Include="Assets\Scripts\ParticlesManager.cs" />
     <Compile Include="Assets\Scripts\RagdollSnapshot.cs" />
     <Compile Include="Assets\Scripts\VFXbuffer.cs" />
+    <Compile Include="Assets\VFXfade.cs" />
     <Reference Include="UnityEngine">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.3.4f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>

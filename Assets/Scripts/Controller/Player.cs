@@ -25,7 +25,7 @@ public class Player : MonoBehaviour
     [HideInInspector] public PlayerCombat combatState;
     [HideInInspector] public PlayerCombatStrike combatStrike;
     [HideInInspector] public PlayerCombatCounter combatCounter;
-    [HideInInspector] public PlayerHit hitState;
+    [HideInInspector] public PlayerOnHit hitState;
 
     [HideInInspector] public Camera cam;
     //Animator//
@@ -87,7 +87,7 @@ public class Player : MonoBehaviour
         combatState = GetComponent<PlayerCombat>();
         combatStrike = GetComponent<PlayerCombatStrike>();
         combatCounter = GetComponent<PlayerCombatCounter>();
-        hitState = GetComponent<PlayerHit>();
+        hitState = GetComponent<PlayerOnHit>();
 
         fsm.State = locomotionState;        
     }

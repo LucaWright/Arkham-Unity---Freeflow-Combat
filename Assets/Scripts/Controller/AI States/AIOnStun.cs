@@ -30,7 +30,8 @@ public class AIOnStun : State
 
     public override void OnUpdate()
     {
-        base.OnUpdate();        
+        base.OnUpdate();
+        agentAI.HandleRootMotionMovement();
     }
 
     public override void OnFixedUpdate()

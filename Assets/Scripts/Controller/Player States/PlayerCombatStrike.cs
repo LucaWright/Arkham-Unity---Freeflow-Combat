@@ -11,11 +11,13 @@ public class PlayerCombatStrike : State
 
     Player player;
     PlayerCombat combatState;
+    CapsuleCollider capsuleCollider;
 
     public AgentAI target;
 
     public float fow = 45f;
 
+    public float strikeSpeed = 3f;
     public float strikeBeat = .75f;
     public Ease strikeEase;
     public LayerMask strikeLayerMask;
@@ -29,6 +31,7 @@ public class PlayerCombatStrike : State
     {
         player = GetComponent<Player>();
         combatState = GetComponent<PlayerCombat>();
+        capsuleCollider = GetComponent<CapsuleCollider>();
     }
 
     void Start()
@@ -57,9 +60,11 @@ public class PlayerCombatStrike : State
     bool FindTarget() //TROVARE ERRORE!
     {
         RaycastHit hitInfo;
-        if (Physics.SphereCast(transform.position + Vector3.up, .75f, player.movementVector, out hitInfo, 20f, strikeLayerMask)) //cambia in spheraCastAll. Deve dare la priorità a chi non è a terra.
+        //SphereCastAll per dare la priorità a un eventuale avversario che non è a terra.
+        if (Physics.SphereCast(transform.position + Vector3.up, .75f, player.movementVector, out hitInfo, 20f, strikeLayerMask))
         {
             target = hitInfo.transform.GetComponent<AgentAI>();
+            Debug.Log("Now we are striking " + target.gameObject.name);
             return true;
         }
         else
@@ -67,7 +72,9 @@ public class PlayerCombatStrike : State
             Collider thugCollider = null;
             float refAngle = fow / 2f;
 
+            capsuleCollider.enabled = false;
             Collider[] thugColliders = Physics.OverlapSphere(transform.position, 20f, strikeLayerMask); //decidere un raggio massimo, in teoria in base al free flow state
+            capsuleCollider.enabled = true;
             foreach (Collider collider in thugColliders)
             {
                 float angle = Vector3.Angle(player.movementVector, collider.transform.position);
@@ -95,6 +102,32 @@ public class PlayerCombatStrike : State
         yield return StrikeImpact();        
     }
 
+    //Old method
+    //IEnumerator StrikeAnticipation()
+    //{
+    //    player.animator.SetTrigger("Strike");
+    //    //Target => Stop (specie se è striker) //DEVE FORZARLO IN IDLE!
+
+    //    float easedValue = 0;
+    //    float attackPercentage = 0;
+
+    //    Vector3 startingAttackPosition = transform.position;
+    //    Vector3 vecToTarget = target.transform.position - player.transform.position;
+    //    Vector3 separator = -vecToTarget.normalized * stoppingDistance;
+
+    //    //Handle rotation
+    //    transform.rotation = Quaternion.LookRotation(vecToTarget, Vector3.up);
+
+    //    while (attackPercentage / strikeBeat < 1)
+    //    {
+    //        attackPercentage += Time.fixedDeltaTime;
+    //        easedValue = DOVirtual.EasedValue(0, 1, Mathf.Clamp01(attackPercentage / strikeBeat), strikeEase);
+    //        transform.position = Vector3.Lerp(startingAttackPosition, target.transform.position + separator, easedValue);
+    //        yield return new WaitForFixedUpdate();
+    //    }
+    //}
+    
+    //NewMethod
     IEnumerator StrikeAnticipation()
     {
         player.animator.SetTrigger("Strike");
@@ -110,13 +143,25 @@ public class PlayerCombatStrike : State
         //Handle rotation
         transform.rotation = Quaternion.LookRotation(vecToTarget, Vector3.up);
 
+        Vector3 distanceVector = vecToTarget + separator;
+        Time.timeScale = Mathf.Clamp(distanceVector.magnitude / strikeSpeed, .3f, 1f);
+
+        player.animator.updateMode = AnimatorUpdateMode.Normal; 
+
         while (attackPercentage / strikeBeat < 1)
         {
-            attackPercentage += Time.fixedDeltaTime;
+            //attackPercentage += Time.fixedUnscaledDeltaTime;
+            attackPercentage += Time.unscaledDeltaTime;
             easedValue = DOVirtual.EasedValue(0, 1, Mathf.Clamp01(attackPercentage / strikeBeat), strikeEase);
+
+            //Creare un lerp tra oldPos e newPos che duri quanto FIXEDDELTATIME. Questo dovrebbe evitare quegli "scattini fastidiosi durante l'update)
+
             transform.position = Vector3.Lerp(startingAttackPosition, target.transform.position + separator, easedValue);
-            yield return new WaitForFixedUpdate();
+            //yield return new WaitForFixedUpdate();
+            yield return new WaitForEndOfFrame();
         }
+
+        player.animator.updateMode = AnimatorUpdateMode.AnimatePhysics;
     }
 
     IEnumerator StrikeImpact()
@@ -138,6 +183,10 @@ public class PlayerCombatStrike : State
     public override void OnExit()
     {
         base.OnExit();
+        player.input.northButton = false;
+        Time.timeScale = 1;
         StopAllCoroutines();
+        if (CombatDirector.strikers.Count > 0) return;
+        CombatDirector.state = CombatDirectorState.Planning;
     }
 }

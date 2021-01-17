@@ -76,21 +76,42 @@ public class AIRecover : State
 
         Vector3 newRootPosition = ResetHipPosition();
 
-        RaycastHit[] hits = Physics.RaycastAll(new Ray(newRootPosition, Vector3.down));
-        newRootPosition.y = float.MinValue;
-        foreach (RaycastHit hit in hits)
+        //RaycastHit[] hits = Physics.RaycastAll(new Ray(newRootPosition, Vector3.down));
+        //newRootPosition.y = float.MinValue;
+        //    if (hits.Length == 0)
+        //    {
+        //        Debug.Log("Il raycast ha fallito!");
+        //        Debug.Break();
+        //    }
+        //foreach (RaycastHit hit in hits)
+        //{
+        //    //if (!hit.transform.IsChildOf(transform))
+        //    //{
+        //    //    newRootPosition.y = Mathf.Max(newRootPosition.y, hit.point.y);
+        //    //}
+        //    newRootPosition.y = Mathf.Max(newRootPosition.y, hit.point.y);
+        //}
+
+        RaycastHit hitInfo;
+        if (Physics.Raycast(shotHipPos, Vector3.down, out hitInfo, 2f, envGeometryLM))
         {
-            if (!hit.transform.IsChildOf(transform))
-            {
-                newRootPosition.y = Mathf.Max(newRootPosition.y, hit.point.y);
-            }
+            newRootPosition.y = hitInfo.point.y;
+        }
+        else
+        {
+            Debug.Log("Anche il tuo raycast nuovo ha fallito");
         }
         transform.position = newRootPosition;
 
         NavMeshHit navMeshHit;
-        if (NavMesh.SamplePosition(newRootPosition, out navMeshHit, 2f, NavMesh.AllAreas))
+        if (NavMesh.SamplePosition(newRootPosition, out navMeshHit, 10f, NavMesh.AllAreas))
         {
             transform.position = navMeshHit.position;
+        }
+        else
+        {
+            Debug.Log("Sarà qui l'errore?");
+            Debug.Break();
         }
 
         Vector3 ragdollDirection = shotHeadPos - shotFeetPos;
@@ -108,6 +129,7 @@ public class AIRecover : State
         agentAI.rootMotion = Vector3.zero; //Questo è meglio che venga fatto in hit?
         //yield return new WaitForFixedUpdate();
         isRootMotionActive = true;
+        //Debug.Break();
 
         float blendAmount = 0;
 

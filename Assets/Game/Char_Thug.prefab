@@ -252,7 +252,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26544e6d474ec1d47b6517bab3522637, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  reanimationBlendTime: 0
+  reanimationBlendTime: 0.5
   envGeometryLM:
     serializedVersion: 2
     m_Bits: 1

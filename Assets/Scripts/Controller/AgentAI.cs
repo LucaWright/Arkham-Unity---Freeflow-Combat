@@ -423,13 +423,18 @@ public class AgentAI : MonoBehaviour
 
     public void ResetNavMeshPath()
     {
-        agentNM.ResetPath();
+        if (agentNM.hasPath)
+            agentNM.ResetPath();
     }
 
     public void OnHit() //Passare la forza!
     {
-        //Eliminare NavMeshSetDestination?
         ResetNavMeshPath();
+        if (CombatDirector.strikers.Contains(this))
+        {
+            CombatDirector.strikers.Remove(this);
+            SetUICounterActive(false);
+        }
         fsm.State = hitState;
     }
 

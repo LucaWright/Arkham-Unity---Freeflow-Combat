@@ -28,16 +28,17 @@ public class AIOnHit : State
         agentAI.state = AgentState.Hit;
         agentAI.avoidanceCollider.enabled = false;
         agentAI.agentNM.enabled = false;
+        agentAI.ResetNavMeshPath();
         agentAI.animator.enabled = false;
         if (CombatDirector.strikers.Contains(agentAI))
         {
             CombatDirector.strikers.Remove(agentAI);
             agentAI.SetUICounterActive(false);
         }
-        if (CombatDirector.strikers.Count == 0)
-        {
-            CombatDirector.state = CombatDirectorState.Planning;
-        }
+        //if (CombatDirector.strikers.Count == 0)
+        //{
+        //    CombatDirector.state = CombatDirectorState.Planning;
+        //}
         //Attiva i rigidbody della ragdoll
         agentAI.SetRagdollKinematicRigidbody(false);
         agentAI.chestRigidbody.AddForce(((transform.position - agentAI.target.position).normalized + Vector3.up * .1f) * 70f, ForceMode.Impulse);

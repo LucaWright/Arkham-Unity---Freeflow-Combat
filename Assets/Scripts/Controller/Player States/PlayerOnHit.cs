@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerHit : State
+public class PlayerOnHit : State
 {
-    public PlayerHit(GameObject go, StateMachine fsm) : base(go, fsm) { }
+    public PlayerOnHit(GameObject go, StateMachine fsm) : base(go, fsm) { }
 
     Player player;
 
@@ -47,12 +47,12 @@ public class PlayerHit : State
     public override void OnExit()
     {
         base.OnExit();
-        CombatDirector.state = CombatDirectorState.Planning;
     }
 
     IEnumerator ExitStun()
     {
         yield return new WaitForSeconds(stunTime);
+        CombatDirector.state = CombatDirectorState.Planning;
         fsm.State = player.locomotionState;
     }
 }

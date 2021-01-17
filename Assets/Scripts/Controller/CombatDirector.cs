@@ -19,6 +19,8 @@ public class CombatDirector : MonoBehaviour
     static List<AgentAI>[] strikersCandidates; //Solo linee disponibili! E se mi convenisse sempre fare una lista, in modo tale da eliminare chi mi pare?
     public static List<AgentAI> strikers;
 
+    public static float strikeStartTime = 0;
+
     private void Awake()
     {
         distanceHandler.Target = GameObject.FindGameObjectWithTag("Player").transform;
@@ -105,7 +107,7 @@ public class CombatDirector : MonoBehaviour
             for (int j = 0; j < strikersCandidates.Length; j++)
             {
                 var candidates = strikersCandidates[j];
-                Debug.Log("Su linea " + (j+1) + " ci sono " + candidates.Count + " candidati.");
+                //Debug.Log("Su linea " + (j+1) + " ci sono " + candidates.Count + " candidati.");
                 if (candidates.Count < i) continue;
 
                 for (int k = 0; k < i; k++)
@@ -115,8 +117,29 @@ public class CombatDirector : MonoBehaviour
                     //candidate.RunForward(candidate.attackRange);
                     candidate.fsm.State = candidate.dispatchingState;
                 }
+                //Gli altri... retreat
+                RetreatNonStrikersFirstLine();
                 state = CombatDirectorState.Dispatching;
                 return;
+            }
+        }
+    }
+
+    void RetreatNonStrikersFirstLine()
+    {
+        foreach (AgentAI agent in agents[1])
+        {
+            if (strikersCandidates[1].Contains(agent)) continue;
+
+            if (agent.state == AgentState.Idle)
+            {
+                StartCoroutine(agent.PullBack1(2));
+            }
+            else
+            if (agent.state == AgentState.Positioning)
+            {
+                StartCoroutine(agent.BackToIdle1());
+                StartCoroutine(agent.PullBack1(2));
             }
         }
     }
@@ -192,6 +215,7 @@ public class CombatDirector : MonoBehaviour
 
     void OnUpdateDispatch()
     {
+        Debug.Log("Numero strikers: " +strikers.Count);
         if (AllStrikersReady()) //EVENT
         {
             state = CombatDirectorState.Executing;
@@ -199,6 +223,7 @@ public class CombatDirector : MonoBehaviour
             {
                 agent.fsm.State = agent.attackingState;
             }
+            strikeStartTime = Time.time;
         }
     }
 
@@ -215,76 +240,6 @@ public class CombatDirector : MonoBehaviour
         //}
     }
 
-
-
-    //void InitializeFoeQueues()
-    //{
-    //    attackingCandidates = new Queue<AIBehavior>[distanceHandler.GetLinesNumber()]; //in teoria, quelli oltre l'ultima linea non possono essere presi come candidati.
-    //    for (int i = 0; i < attackingCandidates.Length; i++)
-    //    {
-    //        attackingCandidates[i] = new Queue<AIBehavior>();
-    //    }
-    //}
-
-    //public void ClearFoeQueues()
-    //{
-    //    for (int i = 0; i < attackingCandidates.Length; i++)
-    //    {
-    //        attackingCandidates[i].Clear();
-    //    }
-    //}
-
-    //Vector2Int Pick2Randoms()
-    //{
-    //    List<int> numbers = new List<int>();
-
-    //    for (int i = 1; i < agents.Length; i++)
-    //    {
-    //        if (agents[i].Count > 0)
-    //            numbers.Add(i);
-    //    }
-
-    //    if (numbers.Count == 0) return new Vector2Int(-1, -1);
-
-    //    var randomLine = Random.Range(0, numbers.Count); //il max del random è esclusivo, quindi +1
-
-    //    return new Vector2Int(numbers.ElementAt(randomLine), 0);
-    //}
-
-    //void PlanAttack() //DECIDI: o Enque lo fa qui, o lo fa quando è in locomotion
-    //{
-    //    for (int i = 0; i < attackingCandidates.Length; i++)
-    //    {
-    //        var elementsCount = attackingCandidates[i].Count;
-
-    //        if (elementsCount == 0) continue;
-
-    //        var randomNumber = Random.Range(0, Mathf.Clamp(elementsCount, 1, 3)); //Pesca un numer da 0 a 3
-
-    //        if (randomNumber == 0) continue; //Se è zero, ricomincia il ciclo;
-
-    //        for (int j = 0; j < elementsCount; j++) //Altrimenti, cicla quel numero e mette i primi in coda nella lista degli attaccanti. E si parte
-    //        {
-    //            var foe = attackingCandidates[i].Dequeue(); //rimuovi dalla coda
-    //            FindListState(foe).Remove(foe); //rimuovi dalla lista il candidato pescato (in qualsiasi lista si trovi)
-    //            strikers.Add(foe); //aggiunti alla lista degli attaccanti (a cui deve anche accedere il player per le sue funzioni di contrattacco)
-    //            foe.Dispatch();
-    //        }
-    //        return;
-    //    }
-    //    //state = DirectorState.Dispatch;
-    //}
-
-    //int ChooseStrikersLine() //potrebbe essere una sega mentale. Magari cerca solo tizi nella prima o seconda linea e li manda.
-    //{
-    //    for (int i = 0; i < attackingCandidates.Length; i++)
-    //    {
-    //        if (attackingCandidates[i].Count > 0)
-    //            return i;
-    //    }
-    //    return -1;
-    //}
-
     bool AllStrikersReady()
     {
         foreach (AgentAI agent in strikers)
@@ -293,89 +248,6 @@ public class CombatDirector : MonoBehaviour
         }
         return true;
     }
-
-    //public void ReturnToPlanningPhase() //valuta una static
-    //{
-    //    ClearFoeQueues();
-    //    state = DirectorState.Planning; //C'è un errore nei passaggi di stato
-    //}
-
-    //public List<AIBehavior> FindListState(AIBehavior foe)
-    //{
-    //    for (int i = 0; i < agents.Length; i++)
-    //    {
-    //        if (agents[i].Contains(foe))
-    //        {
-    //            return agents[i];
-    //        }
-    //    }
-
-    //    if (locomotionState.Contains(foe))
-    //    {
-    //        return locomotionState;
-    //    }
-    //    else
-    //    if (strikers.Contains(foe))
-    //    {
-    //        return strikers;
-    //    }
-    //    else
-    //    if (recoilState.Contains(foe))
-    //    {
-    //        return recoilState;
-    //    }
-    //    return recoverState; //non può prendere tizi in recover state. Penso.
-    //}
-
-    //public void IdleListDebugger()
-    //{
-    //    for (int i = 0; i < agents.Length; i++)
-    //    {
-    //        int count = 0;
-
-    //        foreach (AIBehavior foe in agents[i])
-    //        {
-    //            count++;
-    //        }
-    //        Debug.Log("Numero di agent alla linea " + i + ": " + count);
-    //    }
-    //}
-
-    //void OnUpdateRecoil()
-    //{
-    //    if (recoilState.Count > 0)
-    //    {
-    //        foreach (AIBehavior foe in recoilState.ToList())
-    //        {
-    //            foe.Recoil();
-    //        }
-    //    }
-    //}
-
-    //void OnUpdateGetLines()
-    //{
-    //    for (int i = 1; i < agents.Length; i++)
-    //    {
-    //        foreach (AIBehavior foe in agents[i].ToList())
-    //        {
-    //            var newLine = foe.GetCurrentLine();
-
-    //            if (newLine != i)
-    //            {
-    //                agents[i].Remove(foe);
-    //                agents[newLine].Add(foe); //questo porterà alcuni a essere ciclati più di una volta, ma chissene
-    //            }
-    //        }
-    //    }
-    //}
-
-    //void StopLocomotion()
-    //{
-    //    foreach (AIBehavior foe in locomotionState.ToList())
-    //    {
-    //        foe.ResetAnimationBools();
-    //    }
-    //}
 
     private void OnDrawGizmos()
     {
