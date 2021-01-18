@@ -64,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Game\PlayerInput.cs" />
+    <Compile Include="Assets\SFXplayer.cs" />
     <Compile Include="Assets\Scripts\BillboardBehavior.cs" />
     <Compile Include="Assets\Scripts\Controller\AI States\AIAttacking.cs" />
     <Compile Include="Assets\Scripts\Controller\AI States\AIDispatching.cs" />

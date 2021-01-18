@@ -13,6 +13,9 @@ public class PlayerCombatStrike : State
     PlayerCombat combatState;
     CapsuleCollider capsuleCollider;
 
+    public float strikeImpulseForceMagnitude = 10f;
+    Vector3 strikeImpulseForce;
+
     public AgentAI target;
 
     public float fow = 45f;
@@ -24,7 +27,9 @@ public class PlayerCombatStrike : State
     public float stoppingDistance = .75f;
 
     public GameObject hitPointRef; //trasformarlo in un trasform generico del giocatore
-    public UnityEvent strikeFX;
+    public UnityEvent OnStrikeStartFX;
+    public UnityEvent OnStrikeImpactFX;
+    public UnityEvent OnStrikeEndFX;
 
 
     private void Awake()
@@ -103,6 +108,36 @@ public class PlayerCombatStrike : State
     }
 
     //Old method
+    IEnumerator StrikeAnticipation()
+    {
+        player.animator.SetTrigger("Strike");
+        OnStrikeStartFX.Invoke();
+
+        float easedValue = 0;
+        float attackPercentage = 0;
+
+        Vector3 startingAttackPosition = transform.position;
+        Vector3 vecToTarget = target.transform.position - player.transform.position;
+        Vector3 separator = -vecToTarget.normalized * stoppingDistance;
+
+        //IDEA: Gestire ritmo\distanza tramite animation curve!
+
+        //strikeImpulseForce = player.mass * (vecToTarget + separator) / (strikeBeat /** Time.fixedDeltaTime*/); //andrebbe puntata un po' in basso
+        strikeImpulseForce = (vecToTarget + separator) * strikeImpulseForceMagnitude;
+
+        //Handle rotation
+        transform.rotation = Quaternion.LookRotation(vecToTarget, Vector3.up);
+
+        while (attackPercentage / strikeBeat < 1)
+        {
+            attackPercentage += Time.fixedDeltaTime;
+            easedValue = DOVirtual.EasedValue(0, 1, Mathf.Clamp01(attackPercentage / strikeBeat), strikeEase);
+            transform.position = Vector3.Lerp(startingAttackPosition, target.transform.position + separator, easedValue);
+            yield return new WaitForFixedUpdate();
+        }
+    }
+
+    ////NewMethod
     //IEnumerator StrikeAnticipation()
     //{
     //    player.animator.SetTrigger("Strike");
@@ -118,51 +153,26 @@ public class PlayerCombatStrike : State
     //    //Handle rotation
     //    transform.rotation = Quaternion.LookRotation(vecToTarget, Vector3.up);
 
+    //    Vector3 distanceVector = vecToTarget + separator;
+    //    Time.timeScale = Mathf.Clamp(distanceVector.magnitude / strikeSpeed, .3f, 1f);
+
+    //    player.animator.updateMode = AnimatorUpdateMode.Normal; 
+
     //    while (attackPercentage / strikeBeat < 1)
     //    {
-    //        attackPercentage += Time.fixedDeltaTime;
+    //        //attackPercentage += Time.fixedUnscaledDeltaTime;
+    //        attackPercentage += Time.unscaledDeltaTime;
     //        easedValue = DOVirtual.EasedValue(0, 1, Mathf.Clamp01(attackPercentage / strikeBeat), strikeEase);
+
+    //        //Creare un lerp tra oldPos e newPos che duri quanto FIXEDDELTATIME. Questo dovrebbe evitare quegli "scattini fastidiosi durante l'update)
+
     //        transform.position = Vector3.Lerp(startingAttackPosition, target.transform.position + separator, easedValue);
-    //        yield return new WaitForFixedUpdate();
+    //        //yield return new WaitForFixedUpdate();
+    //        yield return new WaitForEndOfFrame();
     //    }
+
+    //    player.animator.updateMode = AnimatorUpdateMode.AnimatePhysics;
     //}
-    
-    //NewMethod
-    IEnumerator StrikeAnticipation()
-    {
-        player.animator.SetTrigger("Strike");
-        //Target => Stop (specie se è striker) //DEVE FORZARLO IN IDLE!
-
-        float easedValue = 0;
-        float attackPercentage = 0;
-
-        Vector3 startingAttackPosition = transform.position;
-        Vector3 vecToTarget = target.transform.position - player.transform.position;
-        Vector3 separator = -vecToTarget.normalized * stoppingDistance;
-
-        //Handle rotation
-        transform.rotation = Quaternion.LookRotation(vecToTarget, Vector3.up);
-
-        Vector3 distanceVector = vecToTarget + separator;
-        Time.timeScale = Mathf.Clamp(distanceVector.magnitude / strikeSpeed, .3f, 1f);
-
-        player.animator.updateMode = AnimatorUpdateMode.Normal; 
-
-        while (attackPercentage / strikeBeat < 1)
-        {
-            //attackPercentage += Time.fixedUnscaledDeltaTime;
-            attackPercentage += Time.unscaledDeltaTime;
-            easedValue = DOVirtual.EasedValue(0, 1, Mathf.Clamp01(attackPercentage / strikeBeat), strikeEase);
-
-            //Creare un lerp tra oldPos e newPos che duri quanto FIXEDDELTATIME. Questo dovrebbe evitare quegli "scattini fastidiosi durante l'update)
-
-            transform.position = Vector3.Lerp(startingAttackPosition, target.transform.position + separator, easedValue);
-            //yield return new WaitForFixedUpdate();
-            yield return new WaitForEndOfFrame();
-        }
-
-        player.animator.updateMode = AnimatorUpdateMode.AnimatePhysics;
-    }
 
     IEnumerator StrikeImpact()
     {
@@ -170,21 +180,30 @@ public class PlayerCombatStrike : State
         player.animator.SetTrigger("Strike Ender");
         hitPointRef.transform.position = target.chestTransf.position; //compromesso
 
-        target.OnHit();
-        strikeFX.Invoke();
+        target.OnHit(strikeImpulseForce);
+        OnStrikeImpactFX.Invoke();
         yield return combatState.ImpactTimeFreeze(); //dovrebbe essere presa sempre dagli event
 
         player.input.westButton = false; //farglielo fare all'input manager? 
         player.input.northButton = false;
 
+        OnStrikeEndFX.Invoke();
+
         fsm.State = player.combatState;
     }
+
+    //TODO
+    //Recovery che riporti in Locomotion
 
     public override void OnExit()
     {
         base.OnExit();
         player.input.northButton = false;
         Time.timeScale = 1;
+        OnStrikeEndFX.Invoke();
+        //TODO
+        //Una volta che c'è la recovery, queste devono essere messe (ad eccezione di stop all coroutines) a fine impact
+        //Maaaaa... Mettere StopAllCoroutines come funzione base di State Enter PRIMA del passaggio di stato?
         StopAllCoroutines();
         if (CombatDirector.strikers.Count > 0) return;
         CombatDirector.state = CombatDirectorState.Planning;

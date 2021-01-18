@@ -10,7 +10,16 @@ public class AIRecover : State
     public AIRecover(GameObject go, StateMachine fsm) : base(go, fsm) { }
 
     AgentAI agentAI;
+    Animator animator;
+    NavMeshAgent agentNM;
+    SphereCollider avoidanceCollider;
+
+    int idleHash;
+    int getUpFrontHash;
+    int getUpBackHash;
+
     public float reanimationBlendTime = .5f;
+    public float recoveryAgentNMradius = .25f;
 
     Vector3 shotHipPos;
     Vector3 shotHeadPos;
@@ -28,6 +37,22 @@ public class AIRecover : State
     {        
         go = this.gameObject;
         fsm = agentAI.fsm;
+        animator = agentAI.animator;
+        agentNM = agentAI.agentNM;
+        avoidanceCollider = agentAI.avoidanceCollider;
+
+        idleHash = agentAI.idleHash;
+
+        SetRecoveringHashParameters();
+
+        //TODO
+        //Set trigger string to hash
+    }
+
+    void SetRecoveringHashParameters()
+    {
+        getUpFrontHash = Animator.StringToHash("GetUp Front");
+        getUpBackHash = Animator.StringToHash("GetUp Back");
     }
 
     public override void OnEnter()
@@ -52,6 +77,10 @@ public class AIRecover : State
         }
     }
 
+    //TODO
+    //Ridurre a zero (o quasi) il radius del navmesh
+    //Scegliere un momento migliore per riattivare il coollider
+
     IEnumerator RecoverExecution()
     {
         //TAKE SNAPSHOT
@@ -64,33 +93,16 @@ public class AIRecover : State
         }
 
         shotHipPos = agentAI.rootBone.position;
-        shotHeadPos = agentAI.animator.GetBoneTransform(HumanBodyBones.Head).position;
-        shotFeetPos = (agentAI.animator.GetBoneTransform(HumanBodyBones.RightFoot).position + agentAI.animator.GetBoneTransform(HumanBodyBones.LeftFoot).position) * .5f;
+        shotHeadPos = animator.GetBoneTransform(HumanBodyBones.Head).position;
+        shotFeetPos = (animator.GetBoneTransform(HumanBodyBones.RightFoot).position + animator.GetBoneTransform(HumanBodyBones.LeftFoot).position) * .5f;
 
-        agentAI.animator.SetTrigger("Getting Up");
         EvaluateForward();
         //Debug.Break();
-        agentAI.animator.enabled = true;
+        animator.enabled = true;
 
         yield return new WaitForFixedUpdate();
 
         Vector3 newRootPosition = ResetHipPosition();
-
-        //RaycastHit[] hits = Physics.RaycastAll(new Ray(newRootPosition, Vector3.down));
-        //newRootPosition.y = float.MinValue;
-        //    if (hits.Length == 0)
-        //    {
-        //        Debug.Log("Il raycast ha fallito!");
-        //        Debug.Break();
-        //    }
-        //foreach (RaycastHit hit in hits)
-        //{
-        //    //if (!hit.transform.IsChildOf(transform))
-        //    //{
-        //    //    newRootPosition.y = Mathf.Max(newRootPosition.y, hit.point.y);
-        //    //}
-        //    newRootPosition.y = Mathf.Max(newRootPosition.y, hit.point.y);
-        //}
 
         RaycastHit hitInfo;
         if (Physics.Raycast(shotHipPos, Vector3.down, out hitInfo, 2f, envGeometryLM))
@@ -117,18 +129,17 @@ public class AIRecover : State
         Vector3 ragdollDirection = shotHeadPos - shotFeetPos;
         ragdollDirection.y = 0;
 
-        Vector3 animationHeadPos = agentAI.animator.GetBoneTransform(HumanBodyBones.Head).position;
-        Vector3 animationFeetPos = (agentAI.animator.GetBoneTransform(HumanBodyBones.RightFoot).position + agentAI.animator.GetBoneTransform(HumanBodyBones.LeftFoot).position) * .5f;
+        Vector3 animationHeadPos = animator.GetBoneTransform(HumanBodyBones.Head).position;
+        Vector3 animationFeetPos = (animator.GetBoneTransform(HumanBodyBones.RightFoot).position + animator.GetBoneTransform(HumanBodyBones.LeftFoot).position) * .5f;
         Vector3 animationDirection = animationHeadPos - animationFeetPos;
         animationDirection.y = 0;
 
         transform.rotation *= Quaternion.FromToRotation(animationDirection.normalized, ragdollDirection.normalized); //normalizzare serve davvero???
 
-        //yield return new WaitForFixedUpdate();
-        agentAI.agentNM.enabled = true;
-        agentAI.rootMotion = Vector3.zero; //Questo è meglio che venga fatto in hit?
-        //yield return new WaitForFixedUpdate();
+        agentNM.enabled = true;
+        agentAI.rootMotion = Vector3.zero;
         isRootMotionActive = true;
+        agentNM.radius = recoveryAgentNMradius;
         //Debug.Break();
 
         float blendAmount = 0;
@@ -151,22 +162,29 @@ public class AIRecover : State
 
 
         yield return new WaitForFixedUpdate();
-        agentAI.avoidanceCollider.enabled = true;
+        avoidanceCollider.enabled = true;
+        avoidanceCollider.radius = recoveryAgentNMradius;
         isRootMotionActive = true;
-        StartCoroutine(agentAI.BackToIdle1());
+        StartCoroutine(agentAI.BackToIdle());
+
+        while (!animator.IsInTransition(0))
+        {
+            yield return new WaitForFixedUpdate();
+        }
+
+        agentNM.radius = agentAI.agentNMradius;
+        avoidanceCollider.radius = agentAI.agentNMradius;
     }
 
     public void EvaluateForward()
     {
         if (agentAI.rootBone.forward.y >= 0)
         {
-            agentAI.animator.SetTrigger("From Back");
-            //agentAI.rootBone.rotation.SetLookRotation(Vector3.up);
+            animator.SetTrigger(getUpBackHash);
         }
         else
         {
-            agentAI.animator.SetTrigger("From Front");
-            //agentAI.rootBone.rotation.SetLookRotation(Vector3.down);
+            animator.SetTrigger(getUpFrontHash);
         }
     }
 
@@ -180,7 +198,7 @@ public class AIRecover : State
     {
         base.OnExit();
         StopAllCoroutines();
-        agentAI.animator.ResetTrigger(agentAI.idleHash);
+        animator.ResetTrigger(idleHash);
     }
 
 

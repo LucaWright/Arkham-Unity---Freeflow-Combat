@@ -68,6 +68,7 @@ public class CombatDirector : MonoBehaviour
 
     void OnUpdatePlanning()
     {
+        strikers.Clear(); //security check
         LookForCandidates();
         PlanAttack();
         ClearCandidatesLists();
@@ -82,7 +83,7 @@ public class CombatDirector : MonoBehaviour
                 if (agent.state == AgentState.Idle ||
                     agent.state == AgentState.Positioning)
                 {
-                    RaycastHit? hit = CheckAgentPath(agent);
+                    RaycastHit? hit = CheckAgentLineOfSight(agent);
                     if (hit.HasValue)
                     {
                         var hitInfo = (RaycastHit)hit;
@@ -100,7 +101,6 @@ public class CombatDirector : MonoBehaviour
     void PlanAttack()
     {
         var randomNumber = Random.Range(1, maxEnemyCount + 1);
-        //Debug.Log(randomNumber);
 
         for (int i = randomNumber; i > 0; i--)
         {
@@ -115,10 +115,16 @@ public class CombatDirector : MonoBehaviour
                     var candidate = candidates.ElementAt(k);
                     strikers.Add(candidate);
                     //candidate.RunForward(candidate.attackRange);
+                    //TODO
+                    //Fermare le coroutine in atto?
+                    candidate.StopAllCoroutines();
                     candidate.fsm.State = candidate.dispatchingState;
                 }
-                //Gli altri... retreat
-                RetreatNonStrikersFirstLine();
+
+                //TODO (implementata e in test)                
+                //RetreatNonStrikersFirstLine();
+                //La funzione crea problemi. Meglio che a gestire la cosa siano DIRETTAMENTE gli agent.
+                //Del tipo: se lo stato del director è dispatching e sono in prima linea in Idle o Positioning, ALLORA fai pull back
                 state = CombatDirectorState.Dispatching;
                 return;
             }
@@ -129,22 +135,24 @@ public class CombatDirector : MonoBehaviour
     {
         foreach (AgentAI agent in agents[1])
         {
-            if (strikersCandidates[1].Contains(agent)) continue;
+            if (strikers.Contains(agent)) continue;
+            
+            StartCoroutine(agent.PullBack(2)); //Pone il problema dell'avvisare al tizio dietro di levarsi dai coglioni!
 
-            if (agent.state == AgentState.Idle)
-            {
-                StartCoroutine(agent.PullBack1(2));
-            }
-            else
-            if (agent.state == AgentState.Positioning)
-            {
-                StartCoroutine(agent.BackToIdle1());
-                StartCoroutine(agent.PullBack1(2));
-            }
+            //if (agent.state == AgentState.Idle)
+            //{
+            //    StartCoroutine(agent.PullBack1(2));
+            //}
+            //else
+            //if (agent.state == AgentState.Positioning)
+            //{
+            //    StartCoroutine(agent.BackToIdle1());
+            //    StartCoroutine(agent.PullBack1(2));
+            //}
         }
     }
 
-    public RaycastHit? CheckAgentPath(AgentAI agent)
+    public RaycastHit? CheckAgentLineOfSight(AgentAI agent)
     {
         Vector3 raycastOrigin = agent.transform.position + Vector3.up;
         RaycastHit hitInfo;
@@ -176,19 +184,19 @@ public class CombatDirector : MonoBehaviour
         }
     }
 
-    void SetAgentsPriorityOrder()
-    {
-        int timeStepDelta = 0;
+    //void SetAgentsPriorityOrder()
+    //{
+    //    int timeStepDelta = 0;
         
-        for (int i = 1; i < agents.Length; i++)
-        {
-            foreach (AgentAI agent in agents[i].ToList())
-            {
-                timeStepDelta++;
-                agent.idleState.priority = timeStepDelta;
-            }
-        }
-    }
+    //    for (int i = 1; i < agents.Length; i++)
+    //    {
+    //        foreach (AgentAI agent in agents[i].ToList())
+    //        {
+    //            timeStepDelta++;
+    //            agent.idleState.priority = timeStepDelta;
+    //        }
+    //    }
+    //}
 
     void InitializeAgentLists()
     {

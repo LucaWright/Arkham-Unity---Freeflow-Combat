@@ -37,6 +37,9 @@ public class AgentAI : MonoBehaviour
     [HideInInspector] public int movingRightHash;
     [HideInInspector] public int movingLeftHash;
     [HideInInspector] public int runningForwardHash;
+    [HideInInspector] public int stopHash;
+
+    [HideInInspector] public float agentNMradius;
 
     [HideInInspector] public     float       attackRange         =   1.5f;                //LOCAL
     [HideInInspector] public     LayerMask   agentLM;                                     //LOCAL?
@@ -57,20 +60,31 @@ public class AgentAI : MonoBehaviour
     [HideInInspector] public List<RagdollSnapshot> ragdollSnapshot;
 
     [HideInInspector] public Transform chestTransf;
+    [HideInInspector] public Vector3 impulseForce;
 
     private void Awake()
     {
+        agentNM = GetComponent<NavMeshAgent>();
+        animator = GetComponent<Animator>();
+        avoidanceCollider = GetComponent<SphereCollider>();
+        fsm = new StateMachine();
+    }
+
+    private void OnEnable()
+    {
         SetNavMeshAgent();
         SetAnimator();
-        SetAvoidanceCollider();     
+        SetAvoidanceCollider();
         SetRagdollRigidBodies();
         SetRagdollSnapshotSystem();
-        SetFiniteStateMachine();
+        SetFiniteStateMachine(); //a parte fsm, può andare in start
     }
+
     private void Start()
     {
         target = CombatDirector.DistanceInfo.Target;
         CheckCurrentLine();
+        fsm.State = idleState;
     }
 
     private void Update()
@@ -100,27 +114,23 @@ public class AgentAI : MonoBehaviour
 
     #region AWAKE SETTINGS
     void SetNavMeshAgent()
-    {
-        agentNM = GetComponent<NavMeshAgent>();
+    {        
         agentNM.updateRotation = false;
         agentNM.stoppingDistance = attackRange;
+        agentNMradius = agentNM.radius;
     }
     void SetAnimator()
-    {
-        animator = GetComponent<Animator>();
-
+    {  
         idleHash = Animator.StringToHash("Idle");
         movingForwardHash = Animator.StringToHash("Step Forward");
         movingBackwardHash = Animator.StringToHash("Step Backward");
         movingRightHash = Animator.StringToHash("Step Right");
         movingLeftHash = Animator.StringToHash("Step Left");
         runningForwardHash = Animator.StringToHash("Dispatch");
-
-        animator.SetTrigger(idleHash);
+        stopHash = Animator.StringToHash("Stop");
     }
     public void SetAvoidanceCollider()
-    {
-        avoidanceCollider = GetComponent<SphereCollider>();
+    {        
         avoidanceCollider.radius = agentNM.radius;
     }
     public void SetRagdollRigidBodies()
@@ -151,10 +161,8 @@ public class AgentAI : MonoBehaviour
         }
     }
 
-    void SetFiniteStateMachine()
+    void SetFiniteStateMachine() //è lui che prepara i vari stati inserendo script e fsm?
     {
-        fsm = new StateMachine();
-
         idleState = GetComponent<AIIdle>();
         positioningState = GetComponent<AIPositioning>();
         dispatchingState = GetComponent<AIDispatching>();
@@ -162,9 +170,7 @@ public class AgentAI : MonoBehaviour
         retreatState = GetComponent<AIRetrat>(); //retreating?
         stunState = GetComponent<AIOnStun>(); //retreating?
         hitState = GetComponent<AIOnHit>(); //retreating?
-        recoverState = GetComponent<AIRecover>(); //recovering?
-
-        fsm.State = idleState;
+        recoverState = GetComponent<AIRecover>(); //recovering?        
     }
     #endregion
 
@@ -181,9 +187,7 @@ public class AgentAI : MonoBehaviour
     {
         if (currentLine == 0)
         {
-            //PullBack(1);
-            //fsm.State = retreatState;
-            StartCoroutine(PullBack1(1));
+            StartCoroutine(PullBack(1));
             return false;
         }
         else
@@ -196,9 +200,17 @@ public class AgentAI : MonoBehaviour
         return true;
     }
 
-    public void HandleRootMotionMovement()
+    public void HandleRootMotionMovement() //TODO: controllare se entra ancora in questo break
     {
-        agentNM.Move(rootMotion);
+        if (agentNM.isActiveAndEnabled)
+        {
+            agentNM.Move(rootMotion);
+        }
+        else
+        {
+            agentNM.Move(rootMotion);
+            Debug.Break();
+        }
         rootMotion = Vector3.zero;
     }
     public void HandleRootMotionRotation()
@@ -221,52 +233,9 @@ public class AgentAI : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, .1f);
     }
 
-    //public void HandleMovement()
-    //{
-    //    if (!agentNM.hasPath)
-    //    {
-    //        agentNM.Move(rootMotion);
-    //        rootMotion = Vector3.zero;
-    //    }
-    //    else
-    //    {
-    //        agentNM.velocity = rootMotion / Time.fixedDeltaTime;
-    //        agentNM.speed = agentNM.velocity.magnitude;
-    //        rootMotion = Vector3.zero;
-    //    }
-    //}
-
-    //public void HandleRotation()
-    //{
-    //    if (!agentNM.hasPath)
-    //    {
-    //        var towardsDirection = (target.position - transform.position); //mettere funzione di calcolo
-    //        Quaternion lookRotation = Quaternion.LookRotation(towardsDirection, Vector3.up);
-    //        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, .1f);
-    //    }
-    //    else
-    //    {
-    //        var towardsDirection = agentNM.desiredVelocity != Vector3.zero ? agentNM.desiredVelocity : (target.position - transform.position); //funzione calcolo
-    //        Quaternion lookRotation = Quaternion.LookRotation(towardsDirection, Vector3.up);
-    //        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, .1f);
-    //    }
-    //}
-
     #region MOVEMENT TRIGGERS
-    
-    //PER CONTROLLO SUPREMO: COROUTINE!
-    //Set Trigger
-    //L'animazione ha exitTime?
-    //Se sì, aspetta fino all'inizio \ fine (DECIDERE: MA MAGARI DIPENDE DA ANIMAZIONE! FINE PER IDLE, INIZIO PER TUTTE LE ALTRE!) della transizione prima di passare allo stato successivo.
-    //Se non ha exit time, il passaggio di stato avviene immediatamente.
 
-    public void BackToIdle()
-    {
-        movementDir = AgentMovementDir.None;
-        animator.SetTrigger(idleHash); //Tenere 
-    }
-
-    public IEnumerator BackToIdle1()
+    public IEnumerator BackToIdle() //Change State to Idle at animation transition END.
     {
         movementDir = AgentMovementDir.None;
         animator.SetTrigger(idleHash);
@@ -275,29 +244,13 @@ public class AgentAI : MonoBehaviour
         {
             yield return new WaitForFixedUpdate();
         }
-        //Aspetta il termine della transizione
         yield return new WaitForSeconds(animator.GetAnimatorTransitionInfo(0).duration);
-        //Dopodichè, cambia stato. Vale solo per Idle.
         fsm.State = idleState;
     }
 
-    public void PushForward(int _destinationLine)
-    {        
-        destinationLine = _destinationLine;
-        if (currentLine > 1)
-        {
-          movementDir = AgentMovementDir.Forward; 
-          animator.SetTrigger(movingForwardHash);
-        }
-        else
-        {
-            StartCoroutine(BackToIdle1());
-        }
-    }
-
-    public IEnumerator PushForward1(int _destinationLine)
+    public IEnumerator PushForward(int _destinationLine) //Change State to Positioning at animation transition START.
     {
-        destinationLine = Mathf.Max(1, _destinationLine); //Di sicurezza, ma dovrebbe essere inutile
+        destinationLine = Mathf.Max(1, _destinationLine); //Secutiry Check
 
         if (currentLine == 1) yield break;
 
@@ -307,46 +260,27 @@ public class AgentAI : MonoBehaviour
         {
             yield return new WaitForFixedUpdate();
         }
-        //Cambia stato appena la transizione inizia e il trigger viene consumato
         fsm.State = positioningState;
     }
 
-    public void PullBack(int _destinationLine)
+    public IEnumerator PullBack(int _destinationLine) //Change State to Retreat at animation transition START.
     {
-        destinationLine = _destinationLine;
-        if (currentLine < destinationLine)
-        {
-            movementDir = AgentMovementDir.Backward;
-            animator.SetTrigger(movingBackwardHash);
-        }
-        else
-        {
-            BackToIdle();
-        }
-    }
-
-    public IEnumerator PullBack1(int _destinationLine)
-    {
+        //TODO
+        //Potenziale problema: entra qui dentro durante la transizione di un altro stato. Di conseguenza...
+        //Va in backward finita la transizione di un altro trigger e non di questo.
         destinationLine =  _destinationLine;
         if (currentLine >= destinationLine) yield break;
 
         movementDir = AgentMovementDir.Backward;
-        animator.SetTrigger(movingBackwardHash);
+        animator.SetTrigger(movingBackwardHash); //Non spiega, però, perché questo trigger venga resettato. A meno che... non siano gli altri stati a farlo.
         while (!animator.IsInTransition(0))
         {
             yield return new WaitForFixedUpdate();
         }        
-        //Cambia stato appena la transizione inizia e il trigger viene consumato
         fsm.State = retreatState;
     }
 
-    public void StepRight()
-    {
-        movementDir = AgentMovementDir.Right;
-        animator.SetTrigger(movingRightHash);
-    }
-
-    public IEnumerator StepRight1()
+    public IEnumerator StepRight() //Change State to Positioning at animation transition START.
     {
         movementDir = AgentMovementDir.Right;
         animator.SetTrigger(movingRightHash);
@@ -354,15 +288,9 @@ public class AgentAI : MonoBehaviour
         {
             yield return new WaitForFixedUpdate();
         }
-        //Cambia stato appena la transizione inizia e il trigger viene consumato
         fsm.State = positioningState;
     }
-    public void StepLeft()
-    {
-        movementDir = AgentMovementDir.Left;
-        animator.SetTrigger(movingLeftHash);
-    }
-    public IEnumerator StepLeft1()
+    public IEnumerator StepLeft() //Change State to Positioning at animation transition START.
     {
         movementDir = AgentMovementDir.Left;
         animator.SetTrigger(movingLeftHash);
@@ -371,16 +299,15 @@ public class AgentAI : MonoBehaviour
         {
             yield return new WaitForFixedUpdate();
         }
-        //Cambia stato appena la transizione inizia e il trigger viene consumato
         fsm.State = positioningState;
     }
 
-    public void RunForward(float _stoppingDistance) //Attiva il NavMesh
+    public void RunForward(float _stoppingDistance) //Stop all current States.
     {
         movementDir = AgentMovementDir.Forward;
-        StopAllCoroutines();
+        StopAllCoroutines(); //Perchè a volte non funziona?
         animator.ResetTrigger(movingForwardHash);
-        animator.SetTrigger(runningForwardHash); //Run lo chiama in automatico il dispatching
+        animator.SetTrigger(runningForwardHash);
 
         agentNM.SetDestination(target.position);
         agentNM.stoppingDistance = _stoppingDistance;
@@ -412,7 +339,7 @@ public class AgentAI : MonoBehaviour
 
     public void OnStun()
     {
-        isCandidate = false;
+        StopAllCoroutines();
         fsm.State = stunState;
     }    
 
@@ -427,14 +354,21 @@ public class AgentAI : MonoBehaviour
             agentNM.ResetPath();
     }
 
-    public void OnHit() //Passare la forza!
+    public void StopRunning(bool boolean)
+    {
+        animator.SetBool(stopHash, boolean);
+    }
+
+    public void OnHit(Vector3 force) //Passare la forza!
     {
         ResetNavMeshPath();
+        StopAllCoroutines();
         if (CombatDirector.strikers.Contains(this))
         {
             CombatDirector.strikers.Remove(this);
             SetUICounterActive(false);
         }
+        impulseForce = force;
         fsm.State = hitState;
     }
 

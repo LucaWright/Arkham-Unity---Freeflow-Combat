@@ -39,15 +39,6 @@ public class Player : MonoBehaviour
     [HideInInspector] public float multicounterCount;
 
     [HideInInspector] public Vector3     movementVector;
-    //public AgentAI target;
-    //public float stoppingDistance = 1.5f;
-    //public float attackDuration = .75f;
-    //public Ease jumpEase;
-    //public LayerMask raycastMask;
-
-    //Mettere Unity Event?
-    //public Action PlayerFX;
-    //public ParticleSystem batFX;
 
     private void Awake()
     {

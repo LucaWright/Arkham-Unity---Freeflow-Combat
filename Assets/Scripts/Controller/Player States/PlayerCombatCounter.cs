@@ -16,18 +16,22 @@ public class PlayerCombatCounter : State
 
     int counteredThugs;
 
-    public float snappingMaxDistance = 2.5f;
+    public float counterImpulseForceMagnitude = 10f;
 
     public float counterBeat = .75f;
+    public float counterMaxRange = 2.5f;
+
+    public float easeDistance = 1.5f;
     public Ease counterEase;
+    public float counterHurtRaycastLength = 1f;
     public LayerMask counterLayerMask;
-    public float stoppingDistance = 1.5f;
-    public float counterRange = 1f; 
 
     public GameObject hitPointRef; //trasformarlo in un trasform generico del giocatore
 
-    public UnityEvent counterStartFX;
-    public UnityEvent counterFX;
+    public UnityEvent OnCounterStartFX;
+    public UnityEvent OnCounterExecutionFX;
+    public UnityEvent OnCounterImpactFX;
+    public UnityEvent OnCounterEndFX;
 
     //tenere qui:
     //Lista di strikers counterati???
@@ -53,11 +57,12 @@ public class PlayerCombatCounter : State
     public override void OnEnter()
     {
         base.OnEnter();
+        //StopAllCoroutines();
         player.state = PlayerState.Counter;
         player.ResetMovementParameters();
         player.input.northButton = true; //=> Per qualche arcano motivo, durante il passaggi di stato torna a false
         counteredThugs = 0;
-        if (ThugsAreInExecuting() && Vector3.Distance(this.transform.position, FirstThugPosition()) <= snappingMaxDistance)
+        if (ThugsAreInExecuting() && Vector3.Distance(this.transform.position, FirstThugPosition()) <= counterMaxRange)
         {
             StartCoroutine(Counter());
         }
@@ -91,7 +96,7 @@ public class PlayerCombatCounter : State
         return CombatDirector.strikers.ElementAt(0).transform.position;
     }
 
-    void CounterOnce()
+    void CounterOnce(float lerpingTime)
     {
         if (player.input.northButton) //Check input
         {
@@ -100,17 +105,17 @@ public class PlayerCombatCounter : State
             //CombatDirector.strikers.Remove(thug);
             //StartCoroutine di posizionamento?
             //thug.OnStun(); //deve fermarlo SUBITO! Pensa tranquillamente a un freeze! O altro!
-            MoveCounteredThugInPosition(thug);
+            MoveCounteredThugInPosition(thug, lerpingTime);
             player.input.northButton = false;
             counteredThugs++;
             //Debug.Log("Ci sono " +CombatDirector.strikers.Count+ " stronzi nella lista. Hai premuto counter per " + counteredThugs + " volte.");
         }
     }
 
-    void MoveCounteredThugInPosition(AgentAI thug)
+    void MoveCounteredThugInPosition(AgentAI thug, float lerpingTime)
     {
-        Vector3 thugFinalPos = (thug.transform.position - this.transform.position).normalized * stoppingDistance;
-        thug.transform.DOMove(this.transform.position + thugFinalPos, .35f);
+        Vector3 thugFinalPos = (thug.transform.position - this.transform.position).normalized * easeDistance;
+        thug.transform.DOMove(this.transform.position + thugFinalPos, Mathf.Min(lerpingTime, counterBeat / 2f)).SetEase(counterEase);
     }
 
     //Dividiere in: ANTICIPATION, IMPACT, EXECUTION, RECOVERY    
@@ -118,17 +123,17 @@ public class PlayerCombatCounter : State
     IEnumerator CounterAnticipation()
     {
         player.animator.SetTrigger("Counter Setup");
-        counterStartFX.Invoke(); //Metterla qui?
-
-        CounterOnce();
+        OnCounterStartFX.Invoke(); //Metterla qui?
 
         float remainingBeat = counterBeat - (Time.time - CombatDirector.strikeStartTime);
+        CounterOnce(remainingBeat);
+
 
         while (counteredThugs < CombatDirector.strikers.Count)
         {
             //remainingBeat -= Time.fixedDeltaTime;
             remainingBeat -= Time.deltaTime;
-            CounterOnce();
+            CounterOnce(remainingBeat);
             yield return new WaitForEndOfFrame(); //il controllo input deve avvenire in update!
         }
 
@@ -149,6 +154,7 @@ public class PlayerCombatCounter : State
         //COUNTERING
 
         player.animator.SetTrigger("Counter");
+        OnCounterExecutionFX.Invoke();
         //Wait animation transition
         yield return new WaitForFixedUpdate();
         //Get animation transition duration and wait
@@ -162,25 +168,32 @@ public class PlayerCombatCounter : State
         while (!player.animator.IsInTransition(0)) //IDEALE: fino a inizio transition di uscita! Praticamente, fino all'enter del nuovo stato!
         {
             //timer += Time.fixedDeltaTime;
-            Debug.DrawRay(player.rootBone.position, player.rootBone.forward * counterRange, Color.red, .02f);
-            if (Physics.Raycast(player.rootBone.position, player.rootBone.forward, out hitInfo, counterRange, counterLayerMask))
+            Debug.DrawRay(player.rootBone.position, player.rootBone.forward * counterHurtRaycastLength, Color.red, .02f);
+            if (Physics.Raycast(player.rootBone.position, player.rootBone.forward, out hitInfo, counterHurtRaycastLength, counterLayerMask))
             {
                 //Debug.Break();
-                hitInfo.transform.root.GetComponent<AgentAI>().OnHit(); //Problema root
+                //var averageSpeed = -780f * counterRange;
+                //var counterImpulseForce = Vector3.Cross(Vector3.up, transform.forward) * player.mass *  averageSpeed / (counterBeat /** Time.fixedDeltaTime*/);
+                var counterImpulseForce = - Vector3.Cross(Vector3.up, transform.forward) * counterImpulseForceMagnitude;
+                hitInfo.transform.GetComponent<AgentAI>().OnHit(counterImpulseForce);
                 hitPointRef.transform.position = hitInfo.point;
-                counterFX.Invoke();
-
+                OnCounterImpactFX.Invoke();
                 yield return combatState.ImpactTimeFreeze(); //valutare!
                 //yield return ImpactTimeFreeze();
             }
             yield return new WaitForFixedUpdate();
         }
-        //CombatDirector.strikers.Clear(); //?
+        //TODO Controllare
+        //Il planning inizia subito dopo finito il counter, prima di recovery.
+        CombatDirector.state = CombatDirectorState.Planning;
+        //Torna in Combat State per controllare nuovo input.
+        fsm.State = player.combatState;
+        //Intando, prosegue con Coroutine di recovery.
     }
 
     IEnumerator CounterRecovery()
     {
-        yield return new WaitForSeconds(player.animator.GetAnimatorTransitionInfo(0).duration); //+ fixedDeltaTime
+        yield return new WaitForSeconds(player.animator.GetAnimatorTransitionInfo(0).duration);
         yield return new WaitForFixedUpdate();
         while (!player.animator.IsInTransition(0))
         {
@@ -189,6 +202,7 @@ public class PlayerCombatCounter : State
         //Debug.Break();
         yield return new WaitForSeconds(player.animator.GetAnimatorTransitionInfo(0).duration);
         CombatDirector.state = CombatDirectorState.Planning;
+        OnCounterEndFX.Invoke();
         //Debug.Break();
         fsm.State = player.locomotionState;
     }
@@ -199,6 +213,7 @@ public class PlayerCombatCounter : State
     {
         base.OnExit();
         player.input.northButton = false;
+        OnCounterEndFX.Invoke();
         //CombatDirector.strikers.Clear();
         //CombatDirector.state = CombatDirectorState.Planning;
         StopAllCoroutines();

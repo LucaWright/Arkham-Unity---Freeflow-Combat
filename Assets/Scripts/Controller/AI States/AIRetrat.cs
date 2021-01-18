@@ -8,6 +8,9 @@ public class AIRetrat : State
     public AIRetrat(GameObject go, StateMachine fsm) : base(go, fsm) { }
 
     AgentAI agentAI;
+    Animator animator;
+
+    int idleHash;
 
     private void Awake()
     {
@@ -18,12 +21,16 @@ public class AIRetrat : State
     {        
         go = this.gameObject;
         fsm = agentAI.fsm;
+        animator = agentAI.animator;
+
+        idleHash = agentAI.idleHash;
     }
 
     public override void OnEnter()
     {
         base.OnEnter();
         agentAI.state = AgentState.Retreat;
+        //Avverte chi è dietro di sè (se in Idle o Positioning) di andare in retreat a seconda di alcuni casi
         StartCoroutine(RetreatCheckOut());
     }
 
@@ -41,16 +48,15 @@ public class AIRetrat : State
             yield return new WaitForFixedUpdate();
         }
 
-        agentAI.BackToIdle();
+        StartCoroutine(agentAI.BackToIdle());
         
-        while (!agentAI.animator.IsInTransition(0))
+        while (!animator.IsInTransition(0))
         {
             yield return new WaitForFixedUpdate();
         }
-        yield return new WaitForSeconds(agentAI.animator.GetAnimatorTransitionInfo(0).duration);
+        yield return new WaitForSeconds(animator.GetAnimatorTransitionInfo(0).duration);
         yield return new WaitForFixedUpdate();
         fsm.State = agentAI.idleState;
-        //Debug.Break();
     }
 
     public override void OnFixedUpdate()
@@ -58,9 +64,12 @@ public class AIRetrat : State
         base.OnFixedUpdate();
     }
 
+    //FUNZIONE COMUNICAZIONE CON AI DIETRO DI SE'
+
     public override void OnExit()
     {
         base.OnExit();
+        animator.ResetTrigger(idleHash);
         StopAllCoroutines();
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class AIIdle : State
 {
@@ -9,11 +10,21 @@ public class AIIdle : State
 
     AgentAI agentAI;
 
-    float timer = 0;
-    public float positioningCheckTime = 1.5f; //Valutare se trasformarlo in Vector2 e scegliere randomicamente
-    [HideInInspector] public int priority = 0;
+    Animator animator;
+    NavMeshAgent agentNM;
+    SphereCollider avoidanceCollider;
 
-    public LayerMask positioningLayerMask;
+    int idleHash;
+    int movingForwardHash;
+    int movingBackwardHash;
+    int movingRightHash;
+    int movingLeftHash;
+
+    public float positioningCheckTime = 1.5f;
+
+    DistanceHandler distanceInfo;
+    public LayerMask lineOfSightLM;
+    public LayerMask posEvaluationLM;
 
     public const float referenceAngle = 45f;
     public const float straightAngle = 180f;
@@ -27,6 +38,22 @@ public class AIIdle : State
     {        
         go = this.gameObject;
         fsm = agentAI.fsm;
+        animator = agentAI.animator;
+        agentNM = agentAI.agentNM;
+        avoidanceCollider = agentAI.avoidanceCollider;
+
+        SetIldeHashParamters();
+
+        distanceInfo = CombatDirector.DistanceInfo;
+    }
+
+    void SetIldeHashParamters()
+    {
+        idleHash = agentAI.idleHash;
+        movingForwardHash = agentAI.movingForwardHash;
+        movingBackwardHash = agentAI.movingBackwardHash;
+        movingRightHash = agentAI.movingRightHash;
+        movingLeftHash = agentAI.movingLeftHash;
     }
 
     public override void OnEnter()
@@ -41,112 +68,122 @@ public class AIIdle : State
         StartCoroutine(IdleCheckOut());
     }
 
-    public override void OnFixedUpdate() //COME FUNZIONANO LE FUNZIONI PUSH TO??
+    public override void OnFixedUpdate()
     {
         base.OnFixedUpdate();
-        if (!agentAI.IsValidLine()) return; //Serve in LOCAL, in quando può chiamare altri stati
+        if (!agentAI.IsValidLine()) return;
 
+        //Controllo Evaluate davanti a sé sempre? Poi esegue a seconda del mio comando?
+        //On Collision Enter qui?
         agentAI.HandleRootMotionMovement();
         agentAI.HandleRootMotionRotation();
+        //TODO (test):
+        switch (CombatDirector.state)
+        {
+            case CombatDirectorState.Planning:
+                break;
+            case CombatDirectorState.Dispatching:
+                if (agentAI.currentLine == 1)
+                {
+                    if (CombatDirector.strikers.Contains(agentAI)) return;
+                    StartCoroutine(agentAI.PullBack(2));
+                }
+                break;
+            case CombatDirectorState.Executing:
+                break;
+            default:
+                break;
+        }
     }
+
+    //TODO
+    //Funzione emergenza OnCollisionEnter
 
     public override void OnExit()
     {
         base.OnExit();
+        animator.ResetTrigger(idleHash);
+        animator.ResetTrigger(movingForwardHash);
+        animator.ResetTrigger(movingBackwardHash); //TODO TEST: NON RESETTARE?
+        animator.ResetTrigger(movingRightHash);
+        animator.ResetTrigger(movingLeftHash);
         StopAllCoroutines();
     }
 
     IEnumerator IdleCheckOut()
     {
         yield return new WaitForSeconds(positioningCheckTime);
-        for (int i = 0; i < priority; i++) //non può essere inferiore a 1?
-        {
-            yield return new WaitForFixedUpdate();
-        }
-        
-        agentAI.animator.ResetTrigger(agentAI.idleHash); //di sicurezza, dato che può entrare qui da idle e da positioning
+        animator.ResetTrigger(idleHash);
         EvaluateMovement();
     }
 
-    public void EvaluateMovement() //Movement, più che position
+    public void EvaluateMovement()
     {
-        RaycastHit? hit = CheckTowardsDir(transform.forward); //Posso riportarla in LOCAL
+        RaycastHit? hit = CheckTowardsDir(transform.forward);
         if (hit.HasValue)
         {
             var hitInfo = (RaycastHit)hit;
-            PlanNextMovementAction(hitInfo);
+            PlanMovement(hitInfo);
         }
         else
         {
-            //Se non hitta nulla?
-            //In teoria, si deve riposizionare.
-            //Sempre più convinto che serva uno stato specifico per questa situazione
-
-            //Candidate = false;
-            //agentAI.PushForward(1);
-            //fsm.State = agentAI.positioningState;
-            StartCoroutine(agentAI.PushForward1(1));
+            Debug.LogWarning("Se sono entrato qui dentro e si è verificato un bug, è probabile sia perché il thug era troppo vicino al player e lo spherecast non lo ha rilevato.");
+            //In teoria, quanto sopra NON dovrebbe succedere grazie a IsValidLine();
+            //TODO: C'è entrato. Fare controllo di compenetrazione
+            StartCoroutine(agentAI.PushForward(1));
         }
     }
 
-    public RaycastHit? CheckTowardsDir(Vector3 direction) //CheckToward? Dovrebbe valere a prescindere dalla direzione
+    public RaycastHit? CheckTowardsDir(Vector3 direction)
     {
         Vector3 raycastOrigin = transform.position + Vector3.up;
         RaycastHit hitInfo;
-        if (Physics.SphereCast(raycastOrigin, agentAI.agentNM.radius, direction, out hitInfo, CombatDirector.DistanceInfo.LastLineRadius, agentAI.agentLM)) //lasciare spherecast sulla chest?
+        if (Physics.SphereCast(raycastOrigin, agentNM.radius, direction, out hitInfo, distanceInfo.LastLineRadius, lineOfSightLM))
         {
             return hitInfo;
         }
         return null;
     }
 
-    public void PlanNextMovementAction(RaycastHit hitInfo)
+    public void PlanMovement(RaycastHit hitInfo)
     {
         switch (hitInfo.transform.tag)
         {
-            //Hits Characters
             case "Player":
-                MoveForward(); //Vedi se basta un push forward o serve una coroutine.
+                PushForward();
                 return;
-            case "Foe":               
-                EvaluateMovement(hitInfo); //Questa funzione la voglio fare un po' diversa... Al momento, la teniamo così
+            case "Foe":
+                EvaluateSidestep(hitInfo);
                 break;
-            //Hit Obstacle. Avoid obstacle
-            default: //Crea function con nome fico
-                Debug.Log("Valuto");
-                //agentAI.RunForward(CombatDirector.DistanceInfo.LineDistance(agentAI.currentLine)); //Forse, vale la pena fare uno stato apposta.
+            default: //Avoidance Ostacoli. Dovrebbe entrare in uno stato a parte o sfruttare sempre dispatching?
+                Debug.LogWarning("Manca ancora la funzione di avoidance degli ostacoli non-Character");
+                //agentAI.RunForward(CombatDirector.DistanceInfo.LineDistance(agentAI.currentLine));
                 break;
         }
     }
 
-    void MoveForward()
+    void PushForward()
     {
-        //CombatDirector.AddToStrikersCandidateList(agentAI, agentAI.currentLine);
         if (agentAI.currentLine == 1) return;
-        //agentAI.PushForward(1);
-        //fsm.State = agentAI.positioningState;
-        StartCoroutine(agentAI.PushForward1(1));
+        StartCoroutine(agentAI.PushForward(1));
     }
 
-    public void EvaluateMovement(RaycastHit other)
+    public void EvaluateSidestep(RaycastHit other)
     {
-        agentAI.isCandidate = false;
-
         var distance = Vector3.Distance(transform.position, other.transform.position);
-        var lines = Mathf.RoundToInt(distance / CombatDirector.DistanceInfo.LineToLineDistance);
+        var lines = Mathf.RoundToInt(distance / distanceInfo.LineToLineDistance);
+        //Se a stabilire canBackward fosse il collision enter sarebbe meglio.
         switch (lines)
         {
             case 0:
-                //Considerando che è l'altro Thug a obbligarlo a retrocedere, potrebbe: DIRECT RETREAT
                 CheckSurroundings(other.normal, true);
                 break;
-            case 1: //DEVE CAPIRE SOLO SE ANDARE A DESTRA O A SINISTRA
-                //Se potessi scegliere l'ordine in cui vengono controllati i Thugs, sarebbe meno problematico
-                AgentAI otherAgnetAI = other.transform.root.GetComponent<AgentAI>();
+            case 1:
+                AgentAI otherAgnetAI = other.transform.GetComponent<AgentAI>();
                 AgentMovementDir otherMovementDir = otherAgnetAI.movementDir;
                 if (otherMovementDir == AgentMovementDir.Backward)
                 {
-                    CheckSurroundings(other.normal, true); //e se fossero gli altri, muovendosi, a mandare i segnali???
+                    CheckSurroundings(other.normal, true);
                 }
                 else
                 {
@@ -154,19 +191,18 @@ public class AIIdle : State
                 }
                 break;
             default:
-                //Questo è facile
-                //agentAI.PushForward(agentAI.currentLine - (lines - 1));
-                //fsm.State = agentAI.positioningState;
-                StartCoroutine(agentAI.PushForward1(agentAI.currentLine - (lines - 1)));
+                StartCoroutine(agentAI.PushForward(agentAI.currentLine - (lines - 1)));
                 break;
         }
     }
 
-    public void CheckSurroundings(Vector3 normal, bool canBackward) //Questa funzione è una merda. Va rivista
+
+    //TODO: REFACTORING DI QUESTA FUNZIONE!
+    public void CheckSurroundings(Vector3 normal, bool canBackward)
     {
-        agentAI.avoidanceCollider.enabled = false; //Lo spherecast prende anche sé stesso, sennò!
-        RaycastHit[] hits = Physics.SphereCastAll(transform.position + Vector3.up, agentAI.agentNM.radius * 3.5f, Vector3.forward, 0f, agentAI.agentLM); //C'è da scegliere il raggio
-        agentAI.avoidanceCollider.enabled = true;
+        avoidanceCollider.enabled = false; //Lo spherecast prende anche sé stesso, sennò!
+        RaycastHit[] hits = Physics.SphereCastAll(transform.position + Vector3.up, agentNM.radius * 3.5f, Vector3.forward, 0f, posEvaluationLM); //C'è da scegliere il raggio
+        avoidanceCollider.enabled = true;
 
         float normalAngle = Vector3.SignedAngle(transform.forward, normal, Vector3.up);
         float angleSign = Mathf.Sign(normalAngle);
@@ -179,8 +215,8 @@ public class AIIdle : State
             if (canGoRight || canGoLeft || canBackward)
             {
                 Vector3 evaluatedDir = hit.transform.position - transform.position;
-                float evaluatedAngle = Vector3.SignedAngle(angleSign * transform.right, evaluatedDir, Vector3.up); //Senso orario = positivo
-
+                float evaluatedAngle = Vector3.SignedAngle(angleSign * transform.right, evaluatedDir, Vector3.up); //Non si può fare usando la forward? è giusto un pelo più semplice.
+                //Con la trigonometria?
                 if (Mathf.Abs(evaluatedAngle) < referenceAngle / 2f)
                 {
                     canGoRight = false;
@@ -198,7 +234,6 @@ public class AIIdle : State
             }
             else
             {
-                //agentAI.BackToIdle();
                 StartCoroutine(IdleCheckOut());
                 return;
             }
@@ -210,15 +245,13 @@ public class AIIdle : State
             fsm.State = agentAI.positioningState;
             if (canGoRight)
             {
-                //agentAI.StepRight();
-                StartCoroutine(agentAI.StepRight1());
+                StartCoroutine(agentAI.StepRight());
                 return;
             }
             else
             if (canGoLeft)
             {
-                //agentAI.StepLeft();
-                StartCoroutine(agentAI.StepLeft1());
+                StartCoroutine(agentAI.StepLeft());
                 return;
             }            
         }
@@ -227,23 +260,19 @@ public class AIIdle : State
             fsm.State = agentAI.positioningState;
             if (canGoLeft)
             {
-                agentAI.StepLeft();
-                StartCoroutine(agentAI.StepLeft1());
+                StartCoroutine(agentAI.StepLeft());
                 return;
             }
             else
             if (canGoRight)
             {
-                //agentAI.StepRight();
-                StartCoroutine(agentAI.StepRight1());
+                StartCoroutine(agentAI.StepRight());
                 return;
             }            
         }
-        if (canBackward)
+        if (canBackward) //Vedere se effettivamente utile o rilegarla nel collision enter
         {
-            //agentAI.PullBack(agentAI.currentLine + 1); //meglio metterla come parametro del metodo? In questo modo, si è sicuri di non dimenticare mai di settare la destinazione
-            //fsm.State = agentAI.retreatState;
-            StartCoroutine(agentAI.PullBack1(agentAI.currentLine + 1));
+            StartCoroutine(agentAI.PullBack(agentAI.currentLine + 1));
         }
     }
 
@@ -252,7 +281,7 @@ public class AIIdle : State
         if (agentAI != null)
         {
             Gizmos.color = Color.blue;
-            Gizmos.DrawWireSphere(transform.position + Vector3.up, CombatDirector.DistanceInfo.LineToLineDistance);
+            Gizmos.DrawWireSphere(transform.position + Vector3.up, distanceInfo.LineToLineDistance);
         }
     }
 }

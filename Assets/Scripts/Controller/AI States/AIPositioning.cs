@@ -3,21 +3,30 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class AIPositioning : State
 {
     public AIPositioning(GameObject go, StateMachine fsm) : base(go, fsm) { }
 
     AgentAI agentAI;
+    Animator animator;
+    NavMeshAgent agentNM;
+
+    int idleHash;
+    int movingForwardHash;
+    int movingBackwardHash;
+    int movingRightHash;
+    int movingLeftHash;
 
     float clipLength = 0;
     Vector3 averageSpeed;
 
     public int maxSidestep = 2;
     int sidestepCount = 0;
+    DistanceHandler distanceInfo;
+    public LayerMask lineOfSightLM;
 
-    //timer?
-    //stringtohash?
 
     private void Awake()
     {
@@ -28,16 +37,27 @@ public class AIPositioning : State
     {        
         go = this.gameObject;
         fsm = agentAI.fsm;
-        maxSidestep = Mathf.Max(1, maxSidestep); //non può essere minore di 1.
+        animator = agentAI.animator;
+        agentNM = agentAI.agentNM;
+
+        idleHash = agentAI.idleHash;
+        movingForwardHash = agentAI.movingForwardHash;
+        movingBackwardHash = agentAI.movingBackwardHash;
+        movingRightHash = agentAI.movingRightHash;
+        movingLeftHash = agentAI.movingLeftHash;
+
+        distanceInfo = CombatDirector.DistanceInfo;
+
+        maxSidestep = Mathf.Max(1, maxSidestep);
     }
 
     public override void OnEnter()
     {
         base.OnEnter();
         agentAI.state = AgentState.Positioning;
-        sidestepCount = 0; //Alternativa al count
+        sidestepCount = 0;
         StartCoroutine(PositioningCheckIn());
-    }
+    }    
 
     public override void OnUpdate()
     {
@@ -50,16 +70,64 @@ public class AIPositioning : State
         if (!agentAI.IsValidLine()) return;
         agentAI.HandleRootMotionMovement();
         agentAI.HandleRootMotionRotation();
-        if (CombatDirector.state == CombatDirectorState.Planning)
+        //TODO (test):
+        switch (CombatDirector.state)
         {
-            CheckIfCandidate();
+            case CombatDirectorState.Planning:
+                CheckIfCandidate();
+                break;
+            case CombatDirectorState.Dispatching:
+                if (agentAI.currentLine == 1)
+                {
+                    if (CombatDirector.strikers.Contains(agentAI)) return;
+                    agentAI.StopAllCoroutines();
+                    StartCoroutine(agentAI.PullBack(2));
+                }
+                break;
+            case CombatDirectorState.Executing:
+                break;
+            default:
+                break;
         }
     }
 
     public override void OnExit()
     {
         base.OnExit();
+        animator.ResetTrigger(idleHash);
+        animator.ResetTrigger(movingForwardHash);
+        animator.ResetTrigger(movingBackwardHash); //TODO TEST: Non resettare?
+        animator.ResetTrigger(movingRightHash);
+        animator.ResetTrigger(movingLeftHash);
         StopAllCoroutines();
+    }
+
+    //TODO:
+    //Funzione emergenza OnCollisionEnter
+
+    IEnumerator PositioningCheckIn()
+    {
+        //Wait until the new movement animation starts
+        while (!animator.IsInTransition(0))
+        {
+            yield return new WaitForFixedUpdate();
+        }
+        //Then, get the movement animation lenght. Plus animation average speed (we need it for movement casting later)
+        clipLength = animator.GetNextAnimatorClipInfo(0)[0].clip.length;
+        averageSpeed = animator.GetNextAnimatorClipInfo(0)[0].clip.averageSpeed;
+        //The movement animations have exit times. So, we check surroungings each clipLength seconds. But first...
+        //we must wait until the transition ends. Because we want to do this check in the middle of the animation.
+        float waitTime = agentAI.animator.GetAnimatorTransitionInfo(0).duration;
+        yield return new WaitForSeconds(waitTime);
+        //Once positioning state is setted with new movement animation, we can do regular checks until state exit.
+        StartCoroutine(EvaluatePositioning());
+    }
+
+    IEnumerator EvaluatePositioning()
+    {
+        CheckAround(); //Controlla se è arrivato a destinazione, se ha fatto il numero di passi necessari o se ha incontrato un ostacolo
+        yield return new WaitForSeconds(clipLength);
+        StartCoroutine(EvaluatePositioning());
     }
 
     void CheckIfCandidate()
@@ -80,66 +148,37 @@ public class AIPositioning : State
     {
         Vector3 raycastOrigin = transform.position + Vector3.up;
         RaycastHit hitInfo;
-        if (Physics.SphereCast(raycastOrigin, agentAI.agentNM.radius, direction, out hitInfo, CombatDirector.DistanceInfo.LastLineRadius, agentAI.agentLM)) //lasciare spherecast sulla chest?
+        if (Physics.SphereCast(raycastOrigin, agentNM.radius, direction, out hitInfo, distanceInfo.LastLineRadius, lineOfSightLM)) //lasciare spherecast sulla chest?
         {
             return hitInfo;
         }
         return null;
-    }
-
-    IEnumerator PositioningCheckIn()
-    {
-        //Wait until the new movement animation starts
-        while (!agentAI.animator.IsInTransition(0))
-        {
-            yield return new WaitForFixedUpdate();
-        }
-        //Then, get the movement animation lenght. Plus animation average speed (we need it for movement casting later)
-        clipLength = agentAI.animator.GetNextAnimatorClipInfo(0)[0].clip.length;
-        averageSpeed = agentAI.animator.GetNextAnimatorClipInfo(0)[0].clip.averageSpeed;
-        //The movement animations have exit times. So, we check surroungings each clipLength seconds. But first...
-        //we must wait until the transition ends. Because we want to do this check in the middle of the animation.
-        yield return new WaitForSeconds(agentAI.animator.GetAnimatorTransitionInfo(0).duration);
-        //Once positioning state is setted with new movement animation, we can do regular checks until state exit.
-        StartCoroutine(EvaluatePositioning());
-    }
-
-    IEnumerator EvaluatePositioning()
-    {
-        CheckAround(); //Controlla se è arrivato a destinazione, se ha fatto il numero di passi necessari o se ha incontrato un ostacolo
-        yield return new WaitForSeconds(clipLength);
-        StartCoroutine(EvaluatePositioning());
-    }
-
-    IEnumerator PositioningCheckOut()
-    {
-        while (!agentAI.animator.IsInTransition(0))
-        {
-            yield return new WaitForFixedUpdate();
-        }
-        yield return new WaitForSeconds(agentAI.animator.GetAnimatorTransitionInfo(0).duration);
-        yield return new WaitForFixedUpdate();
-        fsm.State = agentAI.idleState;
-        //Debug.Break();
-    }
+    }    
 
     void CheckAround()
     {
-        if (agentAI.currentLine == agentAI.destinationLine || MovementPathObstacleCheck()) //Se trova obstacle può fare cose diverse!
+        if (agentAI.movementDir == AgentMovementDir.Forward)
         {
-            //agentAI.BackToIdle();
-            //StartCoroutine(PositioningCheckOut());
-            StartCoroutine(agentAI.BackToIdle1());
+            if (agentAI.currentLine <= agentAI.destinationLine)
+            {
+                StartCoroutine(agentAI.BackToIdle());
+            }
+            else
+            if (MovementPathObstacleCheck())
+            {
+                //TODO
+                //Valuta se fare direttamente step back. Le funzione di valutazione dovrebbe essere identica ad idle
+                Debug.LogWarning("To do: valutare se fare step back diretto o andare in idle in base a distanza con oggetto hittato.");
+                //Se distanza manipolata = 0, vai in step back. Altrimenti, vai in idle
+            }
         }
-
-        if (agentAI.movementDir == AgentMovementDir.Right || agentAI.movementDir == AgentMovementDir.Left)
+        else      
+        //if (agentAI.movementDir == AgentMovementDir.Right || agentAI.movementDir == AgentMovementDir.Left)
         {
             sidestepCount++;
             if (sidestepCount >= maxSidestep)
             {
-                //agentAI.BackToIdle();
-                //StartCoroutine(PositioningCheckOut());
-                StartCoroutine(agentAI.BackToIdle1());
+                StartCoroutine(agentAI.BackToIdle());
             }
         }
     }
@@ -149,19 +188,14 @@ public class AIPositioning : State
     {
         Vector3 raycastOrigin = transform.position + Vector3.up;
         RaycastHit hitInfo;
-        return Physics.SphereCast(raycastOrigin, agentAI.agentNM.radius, TransformToLocal(averageSpeed), out hitInfo, averageSpeed.magnitude * clipLength, agentAI.agentLM);
-        //Per ora, si limita a fermarsi. Le direzioni sono avanti, destra, sinistra. La posizione indietro (che obbliga all'oggetto hittato di scansarsi) sta nello stato di retreat.
-        //Lo stato di retreat può essere inglobato qui?
+        return Physics.SphereCast(raycastOrigin, agentNM.radius, TransformToLocal(averageSpeed), out hitInfo, averageSpeed.magnitude * clipLength, lineOfSightLM);
+        //Ho bisogno anche che mi ritorni la distanza con l'oggetto, se voglioche capisca che fare.
     }
 
     public Vector3 TransformToLocal(Vector3 reference) //in alternativa a InverseTransformDirection, che non capisco perché stia dando errore
     {
         return transform.forward * reference.z + transform.right * reference.x + transform.up * reference.y;
-    }
-
-    
-
-    
+    } 
 
     private void OnDrawGizmos()
     {
@@ -171,13 +205,7 @@ public class AIPositioning : State
         Vector3 raycastOrigin = transform.position + Vector3.up;
         Gizmos.color = Color.red;
         Gizmos.DrawRay(raycastOrigin, TransformToLocal(averageSpeed) * clipLength);
-        //Gizmos.DrawRay(raycastOrigin, (averageSpeed) * clipLength);
-        Gizmos.DrawWireSphere(raycastOrigin + TransformToLocal(averageSpeed) * clipLength, agentAI.agentNM.radius);
-        //Gizmos.DrawWireSphere(raycastOrigin + (averageSpeed) * clipLength, agentAI.agentNM.radius);
-
-        //Gizmos.color = Color.blue;
-        //Debug.DrawRay(raycastOrigin, transform.forward * averageSpeed.z + transform.right * averageSpeed.x);
-
+        Gizmos.DrawWireSphere(raycastOrigin + TransformToLocal(averageSpeed) * clipLength, agentNM.radius);
         //Debug.Log(Vector3.Angle(transform.forward, transform.InverseTransformDirection(averageSpeed))); //cazzo c'è che non va???
     }
 }

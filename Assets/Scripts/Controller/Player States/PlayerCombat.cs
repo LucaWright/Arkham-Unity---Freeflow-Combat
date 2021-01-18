@@ -7,46 +7,62 @@ public class PlayerCombat : State
     public PlayerCombat(GameObject go, StateMachine fsm) : base(go, fsm) { }
 
     Player player;
+    UserInput input;
+
+    PlayerCombatStrike combatStrike;
+    PlayerCombatCounter combatCounter;
+
+    State oldState;
 
     private void Awake()
     {
         player = GetComponent<Player>();
+        combatStrike = GetComponent<PlayerCombatStrike>();
+        combatCounter = GetComponent<PlayerCombatCounter>();
     }
 
     void Start()
     {
         go = this.gameObject;
         fsm = player.fsm;
+
+        input = player.input;
     }
 
     public override void OnEnter()
     {
         base.OnEnter();
-        //player.state = PlayerState.Counter;
+        //TODO
+        //Attenzione! Non torna in Locomotion da Strike.
+        //Creare una recovery per Strike
         StartCoroutine(ExitCombatState());
     }
 
     public override void OnUpdate()
     {
         base.OnUpdate();
-        //HANDLE INPUT
-        //player.SetMovementVector();
-        //if (player.CheckCombatInput())
-        //{
-        //    //
-        //}
     }
 
     public override void OnFixedUpdate()
     {
         base.OnFixedUpdate();
-        if (player.input.westButton)
+        //TODO
+        //Trova un modo migliore rispetto a questa schifezza!
+        //Una lista di tutti gli State di Combattimento da cliclare a inizio input per ordinare: STOP ALL COROUTINES!
+
+        //OPPURE
+        if (input.westButton)
         {
+            //TODO testare se funziona
+            oldState?.StopAllCoroutines(); //oldState
+            oldState = combatStrike;
             fsm.State = player.combatStrike;
         }
 
-        if (player.input.northButton)
+        if (input.northButton)
         {
+            oldState?.StopAllCoroutines(); //oldState
+            oldState = combatCounter;
             fsm.State = player.combatCounter;
         }
     }
