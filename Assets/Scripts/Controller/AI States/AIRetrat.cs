@@ -39,6 +39,7 @@ public class AIRetrat : State
         base.OnUpdate(); //Rivedere il distance handler, dicendo che se SUPERA 1, allora è zero (floor anziché rount)
         agentAI.HandleRootMotionMovement(); //root motion
         agentAI.HandleRootMotionRotation(); //root motion
+        if (!agentAI.IsValidLine()) return;
     }
 
     IEnumerator RetreatCheckOut()

@@ -18,6 +18,10 @@ public class PlayerCombatStrike : State
 
     public AgentAI target;
 
+    public IAnimatedAction iAction;
+    public AnimatedAction action;
+    public IEnumerator anticipation;
+
     public float fow = 45f;
 
     public float strikeSpeed = 3f;
@@ -31,7 +35,6 @@ public class PlayerCombatStrike : State
     public UnityEvent OnStrikeImpactFX;
     public UnityEvent OnStrikeEndFX;
 
-
     private void Awake()
     {
         player = GetComponent<Player>();
@@ -43,6 +46,7 @@ public class PlayerCombatStrike : State
     {
         go = this.gameObject;
         fsm = player.fsm;
+        anticipation = action.Anticipation();
     }
 
     public override void OnEnter()
@@ -62,7 +66,7 @@ public class PlayerCombatStrike : State
         }
     }
 
-    bool FindTarget() //TROVARE ERRORE!
+    bool FindTarget()
     {
         RaycastHit hitInfo;
         //SphereCastAll per dare la priorità a un eventuale avversario che non è a terra.

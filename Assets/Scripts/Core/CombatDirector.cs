@@ -121,10 +121,7 @@ public class CombatDirector : MonoBehaviour
                     candidate.fsm.State = candidate.dispatchingState;
                 }
 
-                //TODO (implementata e in test)                
-                //RetreatNonStrikersFirstLine();
-                //La funzione crea problemi. Meglio che a gestire la cosa siano DIRETTAMENTE gli agent.
-                //Del tipo: se lo stato del director è dispatching e sono in prima linea in Idle o Positioning, ALLORA fai pull back
+
                 state = CombatDirectorState.Dispatching;
                 return;
             }
@@ -156,7 +153,7 @@ public class CombatDirector : MonoBehaviour
     {
         Vector3 raycastOrigin = agent.transform.position + Vector3.up;
         RaycastHit hitInfo;
-        if (Physics.SphereCast(raycastOrigin, agent.agentNM.radius, agent.transform.forward, out hitInfo, CombatDirector.DistanceInfo.LastLineRadius, agent.agentLM))
+        if (Physics.SphereCast(raycastOrigin, agent.agentNM.radius, agent.transform.forward, out hitInfo, CombatDirector.DistanceInfo.LastLineRadius, agent.agentLineOfSightLM))
         {
             return hitInfo;
         }
@@ -226,12 +223,13 @@ public class CombatDirector : MonoBehaviour
         Debug.Log("Numero strikers: " +strikers.Count);
         if (AllStrikersReady()) //EVENT
         {
-            state = CombatDirectorState.Executing;
             foreach (AgentAI agent in strikers)
             {
                 agent.fsm.State = agent.attackingState;
+                Debug.Log("Counter: " +agent.gameObject.name); //TODO verificare l'errore del false counter
             }
             strikeStartTime = Time.time;
+            state = CombatDirectorState.Executing;
         }
     }
 

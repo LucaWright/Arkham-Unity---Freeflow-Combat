@@ -132,9 +132,9 @@ MonoBehaviour:
   stopHash: 0
   agentNMradius: 0
   attackRange: 1.5
-  agentLM:
+  agentLineOfSightLM:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 257
   target: {fileID: 0}
   currentLine: 4
   destinationLine: 1

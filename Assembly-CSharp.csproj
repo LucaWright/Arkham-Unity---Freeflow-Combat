@@ -65,7 +65,8 @@
   <ItemGroup>
     <Compile Include="Assets\Game\PlayerInput.cs" />
     <Compile Include="Assets\SFXplayer.cs" />
-    <Compile Include="Assets\Scripts\BillboardBehavior.cs" />
+    <Compile Include="Assets\Scenes\CrowdTestScript.cs" />
+    <Compile Include="Assets\Scripts\AnimatedAction.cs" />
     <Compile Include="Assets\Scripts\Controller\AI States\AIAttacking.cs" />
     <Compile Include="Assets\Scripts\Controller\AI States\AIDispatching.cs" />
     <Compile Include="Assets\Scripts\Controller\AI States\AIIdle.cs" />
@@ -75,22 +76,23 @@
     <Compile Include="Assets\Scripts\Controller\AI States\AIRecover.cs" />
     <Compile Include="Assets\Scripts\Controller\AI States\AIRetrat.cs" />
     <Compile Include="Assets\Scripts\Controller\AgentAI.cs" />
-    <Compile Include="Assets\Scripts\Controller\CombatDirector.cs" />
-    <Compile Include="Assets\Scripts\Controller\DistanceHandler.cs" />
     <Compile Include="Assets\Scripts\Controller\Player States\PlayerCombat.cs" />
     <Compile Include="Assets\Scripts\Controller\Player States\PlayerCombatCounter.cs" />
     <Compile Include="Assets\Scripts\Controller\Player States\PlayerCombatStrike.cs" />
     <Compile Include="Assets\Scripts\Controller\Player States\PlayerLocomotion.cs" />
     <Compile Include="Assets\Scripts\Controller\Player States\PlayerOnHit.cs" />
     <Compile Include="Assets\Scripts\Controller\Player.cs" />
-    <Compile Include="Assets\Scripts\Controller\State.cs" />
-    <Compile Include="Assets\Scripts\Controller\StateMachine.cs" />
     <Compile Include="Assets\Scripts\Controller\UserInput.cs" />
-    <Compile Include="Assets\Scripts\DistorsionVFX.cs" />
+    <Compile Include="Assets\Scripts\Core\BillboardBehavior.cs" />
+    <Compile Include="Assets\Scripts\Core\CombatDirector.cs" />
+    <Compile Include="Assets\Scripts\Core\DistanceHandler.cs" />
+    <Compile Include="Assets\Scripts\Core\DistorsionVFX.cs" />
+    <Compile Include="Assets\Scripts\Core\RagdollSnapshot.cs" />
+    <Compile Include="Assets\Scripts\Core\State.cs" />
+    <Compile Include="Assets\Scripts\Core\StateMachine.cs" />
+    <Compile Include="Assets\Scripts\Core\VFXbuffer.cs" />
     <Compile Include="Assets\Scripts\FOWeditor.cs" />
-    <Compile Include="Assets\Scripts\ParticlesManager.cs" />
-    <Compile Include="Assets\Scripts\RagdollSnapshot.cs" />
-    <Compile Include="Assets\Scripts\VFXbuffer.cs" />
+    <Compile Include="Assets\Scripts\IAnimatedAction.cs" />
     <Compile Include="Assets\VFXfade.cs" />
     <Reference Include="UnityEngine">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.3.4f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>

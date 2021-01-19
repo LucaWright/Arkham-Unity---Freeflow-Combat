@@ -42,7 +42,7 @@ public class AgentAI : MonoBehaviour
     [HideInInspector] public float agentNMradius;
 
     [HideInInspector] public     float       attackRange         =   1.5f;                //LOCAL
-    [HideInInspector] public     LayerMask   agentLM;                                     //LOCAL?
+    public     LayerMask   agentLineOfSightLM;                                     //LOCAL?
  //public     Vector2     idleTimeMinMax      =   new Vector2(1, 3);   //LOCAL
 
     [HideInInspector] public Transform target;
@@ -230,7 +230,7 @@ public class AgentAI : MonoBehaviour
     {
         var towardsDirection = agentNM.desiredVelocity != Vector3.zero ? agentNM.desiredVelocity : (target.position - transform.position); //funzione calcolo
         Quaternion lookRotation = Quaternion.LookRotation(towardsDirection, Vector3.up);
-        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, .1f);
+        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, .25f);
     }
 
     #region MOVEMENT TRIGGERS
