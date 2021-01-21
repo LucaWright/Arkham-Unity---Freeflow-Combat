@@ -46,6 +46,8 @@ public class CombatDirector : MonoBehaviour
     IEnumerator Tick()
     {
         yield return new WaitForEndOfFrame();
+        //TODO: FIND!
+        //agents = agents.OrderBy(x => (this.transform.position - distanceHandler.Target.transform.position).sqrMagnitude);
         
         switch (state)
         {
@@ -74,7 +76,7 @@ public class CombatDirector : MonoBehaviour
         ClearCandidatesLists();
     }
 
-    void LookForCandidates()
+    void LookForCandidates() //È il combat director a guardare per i candidati!
     {
         for (int i = 1; i < (agents.Length - 1); i++)
         {
@@ -83,16 +85,18 @@ public class CombatDirector : MonoBehaviour
                 if (agent.state == AgentState.Idle ||
                     agent.state == AgentState.Positioning)
                 {
-                    RaycastHit? hit = CheckAgentLineOfSight(agent);
-                    if (hit.HasValue)
-                    {
-                        var hitInfo = (RaycastHit)hit;
+                    //RaycastHit? hit = CheckAgentLineOfSight(agent);
+                    //if (hit.HasValue)
+                    //{
+                    //    var hitInfo = (RaycastHit)hit;
 
-                        if (hitInfo.transform.tag == "Player")
-                        {
-                            AddToStrikersCandidateList(agent, i);
-                        }
-                    }
+                    //    if (hitInfo.transform.tag == "Player")
+                    //    {
+                    //        AddToStrikersCandidateList(agent, i);
+                    //    }
+                    //}
+                    if (agent.hasGreenLightToTarget) //Se cuò manipolasse un bool in agent??? Così non deve rifare il controllo!
+                        AddToStrikersCandidateList(agent, i);
                 }                
             }
         }
@@ -118,9 +122,9 @@ public class CombatDirector : MonoBehaviour
                     //TODO
                     //Fermare le coroutine in atto?
                     candidate.StopAllCoroutines();
+                    candidate.hasGreenLightToTarget = false; //Serve davvero?
                     candidate.fsm.State = candidate.dispatchingState;
                 }
-
 
                 state = CombatDirectorState.Dispatching;
                 return;
@@ -134,7 +138,8 @@ public class CombatDirector : MonoBehaviour
         {
             if (strikers.Contains(agent)) continue;
             
-            StartCoroutine(agent.PullBack(2)); //Pone il problema dell'avvisare al tizio dietro di levarsi dai coglioni!
+            //StartCoroutine(agent.PullBack(2)); //Pone il problema dell'avvisare al tizio dietro di levarsi dai coglioni!
+            agent.PullBack(2); //Pone il problema dell'avvisare al tizio dietro di levarsi dai coglioni!
 
             //if (agent.state == AgentState.Idle)
             //{
@@ -160,12 +165,24 @@ public class CombatDirector : MonoBehaviour
         return null;
     }
 
-    public static void ChangeLineList(AgentAI agent, int oldLine, int currentLine)
+    public static void UpdateAgentLists(AgentAI agent, int oldLine, int currentLine)
     {
         if (oldLine >= 0)
             agents[oldLine].Remove(agent);
 
         agents[currentLine].Add(agent);
+    }
+
+    public static void UpdateCandidateLists(AgentAI agent, int oldLine, int currentLine)
+    {
+        oldLine = Mathf.Clamp(oldLine, 1, DistanceInfo.Lines -1);
+        currentLine = Mathf.Clamp(currentLine, 1, DistanceInfo.Lines);
+        
+        if (strikersCandidates[oldLine -1].Contains(agent))
+        {
+            strikersCandidates[oldLine -1].Remove(agent);
+            strikersCandidates[currentLine -1].Add(agent);
+        }
     }
 
     public static void AddToStrikersCandidateList(AgentAI agent, int currentLine)
@@ -255,19 +272,19 @@ public class CombatDirector : MonoBehaviour
         return true;
     }
 
-    private void OnDrawGizmos()
-    {
-        //Gizmos.color = Color.blue;
-        //for (int i = 0; i < Handler.Lines; i++)
-        //{
-        //    Gizmos.DrawWireSphere(Handler.Target.position, Handler.FirstLineDistance + Handler.LineToLineDistance * i);
-        //}
+    //private void OnDrawGizmos()
+    //{
+    //    //Gizmos.color = Color.blue;
+    //    //for (int i = 0; i < Handler.Lines; i++)
+    //    //{
+    //    //    Gizmos.DrawWireSphere(Handler.Target.position, Handler.FirstLineDistance + Handler.LineToLineDistance * i);
+    //    //}
 
-        Gizmos.color = Color.blue;
-        for (int i = 0; i < distanceHandler.Lines; i++)
-        {
-            Gizmos.DrawWireSphere(distanceHandler.Target.position, distanceHandler.FirstLineDistance + distanceHandler.LineToLineDistance * i);
-        }
-    }
+    //    Gizmos.color = Color.blue;
+    //    for (int i = 0; i < distanceHandler.Lines; i++)
+    //    {
+    //        Gizmos.DrawWireSphere(distanceHandler.Target.position, distanceHandler.FirstLineDistance + distanceHandler.LineToLineDistance * i);
+    //    }
+    //}
 
 }

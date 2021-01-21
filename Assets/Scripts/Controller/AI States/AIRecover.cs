@@ -165,7 +165,8 @@ public class AIRecover : State
         avoidanceCollider.enabled = true;
         avoidanceCollider.radius = recoveryAgentNMradius;
         isRootMotionActive = true;
-        StartCoroutine(agentAI.BackToIdle());
+        //StartCoroutine(agentAI.BackToIdle());
+        agentAI.BackToIdle();
 
         while (!animator.IsInTransition(0))
         {

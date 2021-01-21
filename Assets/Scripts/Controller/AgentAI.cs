@@ -15,8 +15,8 @@ public class AgentAI : MonoBehaviour
     public      AgentState          state           = AgentState.Idle;
     public      AgentMovementDir    movementDir     = AgentMovementDir.None;
 
+    //STATES
     public StateMachine fsm;
-
     [HideInInspector] public AIIdle idleState;
     [HideInInspector] public AIPositioning positioningState;
     [HideInInspector] public AIDispatching dispatchingState;
@@ -26,11 +26,16 @@ public class AgentAI : MonoBehaviour
     [HideInInspector] public AIOnStun stunState;
     [HideInInspector] public AIRecover recoverState;
 
+    //AGENT COMPONENTS
     [HideInInspector] public Rigidbody       chestRigidbody;
     [HideInInspector] public NavMeshAgent    agentNM;
     [HideInInspector] public Animator        animator;
     [HideInInspector] public SphereCollider avoidanceCollider;
 
+    //NAVMESHAGENT SETTINGS
+    [HideInInspector] public float agentNMradius;
+
+    //ANIMATOR SETTINGS
     [HideInInspector] public int idleHash;
     [HideInInspector] public int movingForwardHash;
     [HideInInspector] public int movingBackwardHash;
@@ -39,7 +44,6 @@ public class AgentAI : MonoBehaviour
     [HideInInspector] public int runningForwardHash;
     [HideInInspector] public int stopHash;
 
-    [HideInInspector] public float agentNMradius;
 
     [HideInInspector] public     float       attackRange         =   1.5f;                //LOCAL
     public     LayerMask   agentLineOfSightLM;                                     //LOCAL?
@@ -62,6 +66,25 @@ public class AgentAI : MonoBehaviour
     [HideInInspector] public Transform chestTransf;
     [HideInInspector] public Vector3 impulseForce;
 
+    public bool hasGreenLightToTarget;
+
+    public const float referenceAngle = 45f;
+    public const float straightAngle = 180f;
+
+    public Vector3 averageVelocityVector = Vector3.zero; //TODO: tiene traccia dei movimenti e della direction degli stessi!
+    public Vector3 desiredDir = Vector3.zero;
+
+    //
+    public float minMovementMagnitudue = .35f;
+
+    Vector3[] rawDirections;
+    //public Vector3[] contextDirection;
+    float[] dangerMap;
+    float[] interestMap;
+    float[] interestMapWeights;
+
+
+
     private void Awake()
     {
         agentNM = GetComponent<NavMeshAgent>();
@@ -78,6 +101,7 @@ public class AgentAI : MonoBehaviour
         SetRagdollRigidBodies();
         SetRagdollSnapshotSystem();
         SetFiniteStateMachine(); //a parte fsm, può andare in start
+        SetAvoidanceSystem();
     }
 
     private void Start()
@@ -172,6 +196,26 @@ public class AgentAI : MonoBehaviour
         hitState = GetComponent<AIOnHit>(); //retreating?
         recoverState = GetComponent<AIRecover>(); //recovering?        
     }
+
+    void SetAvoidanceSystem()
+    {
+        rawDirections = new Vector3[]
+        {
+            Vector3.forward,
+            Vector3.right,
+            - Vector3.right,
+            - Vector3.forward
+        };
+        dangerMap = new float[rawDirections.Length];
+        interestMap = new float[rawDirections.Length];
+        interestMapWeights = new float[]
+        {
+            1f,
+            .7f,
+            .7f,
+            .5f
+        };
+    }
     #endregion
 
     public void CheckCurrentLine()
@@ -180,18 +224,22 @@ public class AgentAI : MonoBehaviour
         currentLine = CombatDirector.DistanceInfo.GetLine(this.transform);
         if (currentLine != oldLine)
         {
-            CombatDirector.ChangeLineList(this, oldLine, currentLine);
+            CombatDirector.UpdateAgentLists(this, oldLine, currentLine);
+            CombatDirector.UpdateCandidateLists(this, oldLine, currentLine);
         }
     }
+
     public bool IsValidLine()
     {
         if (currentLine == 0)
         {
-            StartCoroutine(PullBack(1));
+            //StopAllCoroutines();
+            //StartCoroutine(PullBack(1));
+            PullBack(1);
             return false;
         }
         else
-        if (currentLine > CombatDirector.DistanceInfo.Lines)
+        if (currentLine > CombatDirector.DistanceInfo.Lines) //TODO: funzione dispatching verso ultima linea!
         {
             RunForward(CombatDirector.DistanceInfo.LastLineRadius);
             fsm.State = dispatchingState;
@@ -199,6 +247,178 @@ public class AgentAI : MonoBehaviour
         }
         return true;
     }
+    public bool HasGreenLightToTheTarget() //return bool???
+    {
+        desiredDir = transform.forward;        
+        RaycastHit? hit = CheckTowardsDir(transform.forward);
+        if (hit.HasValue)
+        {
+            var hitInfo = (RaycastHit)hit;
+
+            if (hitInfo.transform.tag == "Player")
+            {
+                //CombatDirector.AddToStrikersCandidateList(this, currentLine); //TODO: verificare, perché potrebbe generare errori. DOVREBBE FARLA I COMBAT DIRECTOR!!
+                hasGreenLightToTarget = true;
+                return hasGreenLightToTarget;
+            }
+            else
+            if (hitInfo.transform.tag == "Enemy")
+            {
+                //Desired direction nel caso hitti un Enemy! Così può valutarla! TODO HIGH PRIORITY
+                //desiredDir += transform.right * Vector3.Dot(transform.right, hitInfo.normal);
+                desiredDir += hitInfo.normal;
+            }
+            else
+            {
+                //C'è un ostacolo da evitare. Deve andare in navmesh
+            }
+
+
+        }
+        hasGreenLightToTarget = false;
+        return hasGreenLightToTarget;
+    }
+    private RaycastHit? CheckTowardsDir(Vector3 direction) //RIPETUTA! DRY!
+    {
+        Vector3 raycastOrigin = transform.position + Vector3.up;
+        RaycastHit hitInfo;
+        if (Physics.SphereCast(raycastOrigin, agentNM.radius, direction, out hitInfo, CombatDirector.DistanceInfo.LastLineRadius, agentLineOfSightLM)) //lasciare spherecast sulla chest?
+        {
+            return hitInfo;
+        }
+        return null;
+    }
+    public void CheckSurroundings() //bool??? Ma la domanda è: può muoversi?
+    {
+        avoidanceCollider.enabled = false;
+        Collider[] characterColliders = Physics.OverlapSphere(avoidanceCollider.transform.position, CombatDirector.DistanceInfo.LineToLineDistance, agentLineOfSightLM); //vedere poi per raggio
+        avoidanceCollider.enabled = true;
+
+        int characterArrayLength = characterColliders.Length;
+
+        if (characterArrayLength > 0)
+        {
+            ResetAllAvoidanceMaps();
+            for (int i = 0; i < characterArrayLength; i++)
+            {
+                Vector3 distanceVector = characterColliders[i].transform.position - transform.position;
+                UpdateDangerMap(distanceVector);
+                //rawDirection += distanceVector.normalized / distanceVector.magnitude * CombatDirector.DistanceInfo.LineToLineDistance; //Vettore minimo = 1;
+            }
+            //EvaluateDirection(rawDirection);
+            EvaluateMovement();
+        }
+        else
+        {
+            //StartCoroutine(PushForward(currentLine - 1));
+            PushForward(currentLine - 1);
+        }
+    }
+
+    void ResetAllAvoidanceMaps()
+    {
+        for (int i = 0; i < dangerMap.Length; i++)
+        {
+            dangerMap[i] = 0;
+        }
+        for (int i = 0; i < interestMap.Length; i++)
+        {
+            interestMap[i] = 0; //inizializzarle già ad 1? 
+        }
+    }
+    void UpdateDangerMap(Vector3 obstacle)
+    {
+        for (int i = 0; i < rawDirections.Length; i++)
+        {
+            float dot = Vector3.Dot(obstacle, WorldToLocalVector(rawDirections[i]));
+            if (dot > 0)
+            {
+                dangerMap[i] += Vector3.Dot(obstacle, WorldToLocalVector(rawDirections[i]));
+            }
+        }
+    }
+
+    Vector3 WorldToLocalVector(Vector3 _vector)
+    {
+        return _vector.z * transform.forward + _vector.x * transform.right + _vector.y * transform.up;
+    }
+
+    void EvaluateMovement() //return type
+    {
+        float interest = 0f;
+        int index = 0;
+
+        for (int i = 0; i < dangerMap.Length; i++)
+        {
+            interestMap[i] = Mathf.Clamp01(1 - dangerMap[i]) * interestMapWeights[i]; //Già pesato
+
+            if (interestMap[i] > interest) //Cerca l'interesse più alto
+            {
+                interest = interestMap[i];
+                index = i;
+            }
+        }
+
+        desiredDir = (WorldToLocalVector(rawDirections[index]) * interestMap[index]);
+        //desiredDir = desiredDir.sqrMagnitude >= Mathf.Pow(minMovementMagnitudue, 2) ? desiredDir : Vector3.zero;
+        if (desiredDir.sqrMagnitude >= Mathf.Pow(minMovementMagnitudue, 2))
+        {
+            switch (index)
+            {
+                case 0:
+                    PushForward(currentLine - 1);
+                    break;
+                case 1:
+                    StepRight();
+                    break;
+                case 2:
+                    StepLeft();
+                    break;
+                case 3:
+                    PullBack(currentLine + 1);
+                    break;
+            }
+        }
+        else
+        if (state != AgentState.Idle)
+        {
+            BackToIdle();
+        }        
+    }
+
+    //void EvaluateDirection(Vector3 rawDirection)
+    //{
+    //    if (rawDirection.magnitude < 1.4f) //la magnitude ci dice anche  se deve stare fermo! Mica ci dobbiamo muovere per forza!
+    //    {
+    //        return;
+    //    }
+
+    //    Debug.DrawRay(avoidanceCollider.transform.position, rawDirection, Color.green);
+    //    float angle = Vector3.SignedAngle(transform.forward, rawDirection.normalized, Vector3.up); //Senza normalizzazione, diventa un parametro che indica "l'urgenza". Tramite animation blending si può regolare la velocità.
+
+    //    if (Mathf.Abs(angle) <= referenceAngle / 2f)
+    //    {
+    //        //StartCoroutine(PushForward(currentLine - 1));
+    //        PushForward(currentLine - 1);
+    //    }
+    //    else
+    //    if (Mathf.Abs(angle) > straightAngle - referenceAngle / 2f)
+    //    {
+    //        //StartCoroutine(PullBack(currentLine + 1));
+    //        PullBack(currentLine + 1);
+    //    }
+    //    else
+    //    if (angle > referenceAngle / 2f)
+    //    {
+    //        //StartCoroutine(StepRight());
+    //        StepRight();
+    //    }
+    //    else
+    //    {
+    //        //StartCoroutine(StepLeft());
+    //        StepLeft();
+    //    }
+    //}
 
     public void HandleRootMotionMovement() //TODO: controllare se entra ancora in questo break
     {
@@ -235,70 +455,149 @@ public class AgentAI : MonoBehaviour
 
     #region MOVEMENT TRIGGERS
 
-    public IEnumerator BackToIdle() //Change State to Idle at animation transition END.
+    //public IEnumerator BackToIdle() //Change State to Idle at animation transition END.
+    //{
+    //    movementDir = AgentMovementDir.None;
+    //    animator.SetTrigger(idleHash);
+
+    //    //Se è già in transition, aspetta...
+    //    while (animator.IsInTransition(0))
+    //    {
+    //        yield return new WaitForFixedUpdate();
+    //    }
+    //    //Dopodiché, aspetta la prossima transizione...
+
+    //    while (!animator.IsInTransition(0))
+    //    {
+    //        yield return new WaitForFixedUpdate();
+    //    }
+    //    yield return new WaitForSeconds(animator.GetAnimatorTransitionInfo(0).duration);
+    //    fsm.State = idleState;
+    //}
+
+    public void BackToIdle()
     {
         movementDir = AgentMovementDir.None;
         animator.SetTrigger(idleHash);
-
-        while (!animator.IsInTransition(0))
-        {
-            yield return new WaitForFixedUpdate();
-        }
-        yield return new WaitForSeconds(animator.GetAnimatorTransitionInfo(0).duration);
         fsm.State = idleState;
     }
 
-    public IEnumerator PushForward(int _destinationLine) //Change State to Positioning at animation transition START.
+    //public IEnumerator PushForward(int _destinationLine) //Change State to Positioning at animation transition START.
+    //{
+    //    destinationLine = Mathf.Max(1, _destinationLine); //Secutiry Check
+
+    //    if (currentLine == 1) yield break;
+
+    //    movementDir = AgentMovementDir.Forward;
+    //    animator.SetTrigger(movingForwardHash);
+    //    //Se è già in transition, aspetta...
+    //    while (animator.IsInTransition(0))
+    //    {
+    //        yield return new WaitForFixedUpdate();
+    //    }
+    //    //Dopodiché, aspetta la prossima transizione...
+    //    while (!animator.IsInTransition(0))
+    //    {
+    //        yield return new WaitForFixedUpdate();
+    //    }
+    //    fsm.State = positioningState;
+    //}
+
+    public void PushForward(int _destinationLine)
     {
         destinationLine = Mathf.Max(1, _destinationLine); //Secutiry Check
-
-        if (currentLine == 1) yield break;
+        if (currentLine == 1) //Security check? TODO: verifica chi fa questo controllo
+        {
+            BackToIdle();
+            return;
+        }
 
         movementDir = AgentMovementDir.Forward;
         animator.SetTrigger(movingForwardHash);
-        while (!animator.IsInTransition(0))
-        {
-            yield return new WaitForFixedUpdate();
-        }
         fsm.State = positioningState;
     }
 
-    public IEnumerator PullBack(int _destinationLine) //Change State to Retreat at animation transition START.
-    {
-        //TODO
-        //Potenziale problema: entra qui dentro durante la transizione di un altro stato. Di conseguenza...
-        //Va in backward finita la transizione di un altro trigger e non di questo.
-        destinationLine =  _destinationLine;
-        if (currentLine >= destinationLine) yield break;
+    //public IEnumerator PullBack(int _destinationLine) //Change State to Retreat at animation transition START.
+    //{
+    //    //TODO
+    //    //Potenziale problema: entra qui dentro durante la transizione di un altro stato. Di conseguenza...
+    //    //Va in backward finita la transizione di un altro trigger e non di questo.
+    //    destinationLine = _destinationLine;
+    //    //if (currentLine >= destinationLine)
+    //    //{
+    //    //    yield break;
+    //    //}           
 
+    //    fsm.State = retreatState;
+    //    movementDir = AgentMovementDir.Backward;
+    //    animator.SetTrigger(movingBackwardHash); //Non spiega, però, perché questo trigger venga resettato. A meno che... non siano gli altri stati a farlo.
+
+    //    yield break;
+
+    //    ////Se è già in transition, aspetta...
+    //    //while (animator.IsInTransition(0))
+    //    //{
+    //    //    yield return new WaitForFixedUpdate();
+    //    //}
+    //    ////Dopodiché, aspetta la prossima transizione...
+    //    //while (!animator.IsInTransition(0))
+    //    //{
+    //    //    yield return new WaitForFixedUpdate();
+    //    //}        
+    //}
+
+    public void PullBack(int _destinationLine)
+    {
+        destinationLine = _destinationLine;
         movementDir = AgentMovementDir.Backward;
-        animator.SetTrigger(movingBackwardHash); //Non spiega, però, perché questo trigger venga resettato. A meno che... non siano gli altri stati a farlo.
-        while (!animator.IsInTransition(0))
-        {
-            yield return new WaitForFixedUpdate();
-        }        
+        animator.SetTrigger(movingBackwardHash);
         fsm.State = retreatState;
     }
 
-    public IEnumerator StepRight() //Change State to Positioning at animation transition START.
+    //public IEnumerator StepRight() //Change State to Positioning at animation transition START.
+    //{
+    //    movementDir = AgentMovementDir.Right;
+    //    animator.SetTrigger(movingRightHash);
+    //    //Se è già in transition, aspetta...
+    //    while (animator.IsInTransition(0))
+    //    {
+    //        yield return new WaitForFixedUpdate();
+    //    }
+    //    //Dopodiché, aspetta la prossima transizione...
+    //    while (!animator.IsInTransition(0))
+    //    {
+    //        yield return new WaitForFixedUpdate();
+    //    }
+    //    fsm.State = positioningState;
+    //}
+    //public IEnumerator StepLeft() //Change State to Positioning at animation transition START.
+    //{
+    //    movementDir = AgentMovementDir.Left;
+    //    animator.SetTrigger(movingLeftHash);
+    //    //Se è già in transition, aspetta...
+    //    while (animator.IsInTransition(0))
+    //    {
+    //        yield return new WaitForFixedUpdate();
+    //    }
+    //    //Dopodiché, aspetta la prossima transizione...
+    //    while (!animator.IsInTransition(0))
+    //    {
+    //        yield return new WaitForFixedUpdate();
+    //    }
+    //    fsm.State = positioningState;
+    //}
+
+    public void StepRight()
     {
         movementDir = AgentMovementDir.Right;
         animator.SetTrigger(movingRightHash);
-        while (!animator.IsInTransition(0))
-        {
-            yield return new WaitForFixedUpdate();
-        }
         fsm.State = positioningState;
     }
-    public IEnumerator StepLeft() //Change State to Positioning at animation transition START.
+
+    public void StepLeft()
     {
         movementDir = AgentMovementDir.Left;
         animator.SetTrigger(movingLeftHash);
-
-        while (!animator.IsInTransition(0))
-        {
-            yield return new WaitForFixedUpdate();
-        }
         fsm.State = positioningState;
     }
 
@@ -317,7 +616,7 @@ public class AgentAI : MonoBehaviour
     public bool NavMeshDestinationReached()
     {
         //DEBUGGER PATH
-        Debug.DrawRay(transform.position + Vector3.up, agentNM.desiredVelocity, Color.blue);
+        //Debug.DrawRay(transform.position + Vector3.up, agentNM.desiredVelocity, Color.blue);
         for (int i = 0; i < agentNM.path.corners.Length - 1; i++)
         {
             Debug.DrawLine(agentNM.path.corners[i], agentNM.path.corners[i + 1], Color.cyan, 0.02f);

@@ -1,83 +1,188 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Data;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using UnityEditor.Animations;
 using UnityEngine;
 
+[SelectionBase]
 public class CrowdTestScript : MonoBehaviour
 {
     public Transform reference;
 
     float timer = 0;
-    public float everyXseconds = .5f;
+    //public float everyXseconds = .5f;
+    public Vector2 everyMinMaxSeconds;
 
     public float speed;
     public float avoidanceRadius;
     public LayerMask avoidanceMask;
+    public float minMovementMagnitudue = .35f;
 
-    public Vector3 movementVector = Vector3.zero;
+    public float[] interestMapWeights;
+    public Vector3[] contextVectors;
+    public float[] interestMap;
+    public float[] dangerMap;
 
-    CapsuleCollider collider;
+    public Vector3 desiredDir;
+
+    CapsuleCollider avoidanceCollider;
+
+    bool isOverriding;
     
     
     // Start is called before the first frame update
     void Start()
     {
-        collider = GetComponent<CapsuleCollider>();
+        avoidanceCollider = GetComponent<CapsuleCollider>();
+        contextVectors = new Vector3[]
+        {
+            Vector3.forward,
+            Vector3.right,
+            - Vector3.right,
+            - Vector3.forward
+        };
+        interestMapWeights = new float[]
+        {
+            1f,
+            .7f,
+            .7f,
+            .5f
+        };
+
+        interestMap = new float[contextVectors.Length];
+        dangerMap = new float[contextVectors.Length];
     }
 
-    // Update is called once per frame
     void Update()
     {
         timer += Time.deltaTime;
-        if (timer > everyXseconds)
+
+        var everyXseconds = Random.Range(everyMinMaxSeconds.x, everyMinMaxSeconds.y);
+
+        if (timer >= everyXseconds)
         {
-            timer = 0;
+            timer -= everyXseconds;
+            ResetAllAvoidanceMaps();
             CheckSurroundings();
         }
         MoveTo();
     }
 
-    void CheckSurroundings()
+    void ResetAllAvoidanceMaps()
     {
-        collider.enabled = false;
-        Collider[] agents = Physics.OverlapSphere(transform.position + Vector3.up, avoidanceRadius, avoidanceMask);
-        collider.enabled = true;
-
-        Debug.Log("Colliders: " + agents.Length);
-
-        if (agents.Length > 0)
+        for (int i = 0; i < dangerMap.Length; i++)
         {
-            Vector3[] distanceVectors = new Vector3[agents.Length];
+            dangerMap[i] = 0;
+        }
+        for (int i = 0; i < interestMap.Length; i++)
+        {
+            interestMap[i] = 0;
+        } 
+    }
 
-            for (int i = 0; i < agents.Length; i++)
+    public void CheckSurroundings()
+    {
+        avoidanceCollider.enabled = false;
+        Collider[] characterColliders = Physics.OverlapSphere(avoidanceCollider.transform.position, avoidanceRadius, avoidanceMask);
+        avoidanceCollider.enabled = true;
+
+        int characterArrayLength = characterColliders.Length;
+        if (characterArrayLength > 0)
+        {
+            for (int i = 0; i < characterArrayLength; i++)
             {
-                Transform agentTransform = agents[i].transform;
-                distanceVectors[i] = transform.position - agentTransform.position;
+                Vector3 distanceVector = (characterColliders[i].transform.position - transform.position);
+                UpdateDangerMap(distanceVector);
+                Debug.DrawRay(transform.position + Vector3.up, distanceVector, Color.red, .02f);
             }
-
-            movementVector = Vector3.zero;
-
-            for (int i = 0; i < distanceVectors.Length; i++)
-            {
-                movementVector += distanceVectors[i];
-            }            
+        }
+        if (isOverriding)
+        {
+            Debug.Log("C'è entrata lo stesso dopo il break");
         }
         else
         {
-            movementVector = transform.forward;
+            EvaluateMovement();
         }
+    }
+
+    void UpdateDangerMap(Vector3 distanceVector)
+    {
+        for (int  i = 0;  i < contextVectors.Length;  i++)
+        {
+            float dot = Vector3.Dot(distanceVector, WorldToLocalDir(contextVectors[i]));
+            //Check if OVERRIDE!
+            if (i == 0)
+            {
+                if (distanceVector.sqrMagnitude <= Mathf.Pow(avoidanceRadius, 2) && dot > .7f)
+                {
+                    //OVERRIDE!
+                    isOverriding = true;
+                    PullBack();
+                    return;
+                }
+            }
+            //if (isOverriding)
+            //{
+            //    Debug.Log("C'è entrata lo stesso dopo il break");
+            //}
+            if (dot > 0)
+            {
+                dangerMap[i] += Vector3.Dot(distanceVector, WorldToLocalDir(contextVectors[i])); //TODO DARE DEI PESI IN BASE A DISTANZA?
+            }
+        }
+    }
+
+    void EvaluateMovement()
+    {
+        float interest = 0f;
+        int index = 0;
+
+        for (int i = 0; i < dangerMap.Length; i++)
+        {
+            //Update Interest Map (weighed)
+            interestMap[i] = Mathf.Clamp01(1 - dangerMap[i]) * interestMapWeights[i];
+
+            //And check for the highest interest
+            if (interestMap[i] > interest)
+            {
+                interest = interestMap[i];
+                index = i;
+            }
+        }
+        Debug.DrawRay(transform.position + Vector3.up, WorldToLocalDir(contextVectors[index]) * interestMap[index], Color.blue, .02f);
+
+        //Finally, find the most desireble movement direction
+        desiredDir = (WorldToLocalDir(contextVectors[index]) * interestMap[index]).sqrMagnitude >= Mathf.Pow(minMovementMagnitudue, 2) ?
+                     WorldToLocalDir(contextVectors[index]) : Vector3.zero;
+    }
+
+    void PullBack()
+    {
+        desiredDir = WorldToLocalDir(Vector3.back);
+        //Debug.Log(this.gameObject.name + " is Overriding!");
     }
 
     void MoveTo()
     {
+        if (isOverriding)
+        {
+            Debug.Log("Sono entrata!");
+            isOverriding = false;
+        }
         Quaternion lookAt = Quaternion.LookRotation(reference.position - transform.position, Vector3.up);
         transform.rotation = Quaternion.Slerp(transform.rotation, lookAt, .25f);
-        transform.position += movementVector.normalized * speed * Time.deltaTime; //Anziché normalizzare e basta, vedi anche di calcolare modifiche alla speed;
-
-        Debug.DrawRay(transform.position + Vector3.up, movementVector * avoidanceRadius, Color.green, .02f);
+        transform.position += desiredDir * speed * Time.deltaTime;
     }
 
-    private void OnDrawGizmos()
+    Vector3 WorldToLocalDir(Vector3 direction)
+    {
+        return direction.z * transform.forward + direction.x * transform.right + direction.y * transform.up;
+    }
+
+    private void OnDrawGizmosSelected()
     {
         Gizmos.DrawWireSphere(transform.position + Vector3.up, avoidanceRadius);
     }

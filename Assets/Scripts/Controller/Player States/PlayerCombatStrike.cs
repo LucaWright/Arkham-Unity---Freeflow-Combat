@@ -46,7 +46,7 @@ public class PlayerCombatStrike : State
     {
         go = this.gameObject;
         fsm = player.fsm;
-        anticipation = action.Anticipation();
+        //anticipation = action.Anticipation();
     }
 
     public override void OnEnter()

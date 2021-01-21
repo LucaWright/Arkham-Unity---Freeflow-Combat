@@ -145,6 +145,8 @@ MonoBehaviour:
   ragdollBodyParts: []
   chestTransf: {fileID: 0}
   impulseForce: {x: 0, y: 0, z: 0}
+  hasGreenLightToTarget: 0
+  averageVelocityVector: {x: 0, y: 0, z: 0}
 --- !u!114 &3624647327916693803
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -157,7 +159,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2bf6ad80731f84a4aaebbec2ae427938, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  positioningCheckTime: 1.5
+  positioningCheckTime: 0.25
   lineOfSightLM:
     serializedVersion: 2
     m_Bits: 257

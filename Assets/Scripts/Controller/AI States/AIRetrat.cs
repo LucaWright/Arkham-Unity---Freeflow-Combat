@@ -31,15 +31,27 @@ public class AIRetrat : State
         base.OnEnter();
         agentAI.state = AgentState.Retreat;
         //Avverte chi è dietro di sè (se in Idle o Positioning) di andare in retreat a seconda di alcuni casi
-        StartCoroutine(RetreatCheckOut());
+        StartCoroutine(RetreatCheckIn());
+        //StartCoroutine(RetreatCheckOut());
     }
 
     public override void OnUpdate()
     {
-        base.OnUpdate(); //Rivedere il distance handler, dicendo che se SUPERA 1, allora è zero (floor anziché rount)
+        base.OnUpdate();
         agentAI.HandleRootMotionMovement(); //root motion
         agentAI.HandleRootMotionRotation(); //root motion
-        if (!agentAI.IsValidLine()) return;
+
+        //TODO vedere se mettere anche qui il check hasGreenLightToTarget
+    }
+
+    IEnumerator RetreatCheckIn()
+    {
+        while (!animator.IsInTransition(0))
+        {
+            yield return new WaitForFixedUpdate();
+        }
+        yield return new WaitForSeconds(animator.GetAnimatorTransitionInfo(0).duration);
+        StartCoroutine(RetreatCheckOut());
     }
 
     IEnumerator RetreatCheckOut()
@@ -48,16 +60,8 @@ public class AIRetrat : State
         {
             yield return new WaitForFixedUpdate();
         }
-
-        StartCoroutine(agentAI.BackToIdle());
-        
-        while (!animator.IsInTransition(0))
-        {
-            yield return new WaitForFixedUpdate();
-        }
-        yield return new WaitForSeconds(animator.GetAnimatorTransitionInfo(0).duration);
-        yield return new WaitForFixedUpdate();
-        fsm.State = agentAI.idleState;
+        //StartCoroutine(agentAI.BackToIdle());
+        agentAI.BackToIdle();
     }
 
     public override void OnFixedUpdate()
@@ -70,7 +74,7 @@ public class AIRetrat : State
     public override void OnExit()
     {
         base.OnExit();
-        animator.ResetTrigger(idleHash);
+        //animator.ResetTrigger(idleHash);
         StopAllCoroutines();
     }
 }

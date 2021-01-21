@@ -106,7 +106,8 @@ public class AIAttacking : State
         }
         CombatDirector.strikers.Remove(agentAI);
         SetUICounterActive(false);
-        StartCoroutine(agentAI.BackToIdle());
+        //StartCoroutine(agentAI.BackToIdle());
+        agentAI.BackToIdle();
     }
 
     
