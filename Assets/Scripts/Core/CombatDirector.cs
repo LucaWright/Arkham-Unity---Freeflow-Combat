@@ -9,7 +9,8 @@ public class CombatDirector : MonoBehaviour
     public static CombatDirectorState state = CombatDirectorState.Planning;
 
     public string combatState = "";
-    public int maxEnemyCount = 3;
+    public int maxEnemyCount = 3; //Diventa un array in cui devo inserire le percentuali?
+    public int[] randomPercentage;
 
     [SerializeField] DistanceHandler distanceHandler = new DistanceHandler();
     
@@ -78,33 +79,41 @@ public class CombatDirector : MonoBehaviour
 
     void LookForCandidates() //È il combat director a guardare per i candidati!
     {
-        for (int i = 1; i < (agents.Length - 1); i++)
+        for (int i = 1; i < (agents.Length - 1); i++) //Esclude a priori quelli sulla linea zero
         {
             foreach (AgentAI agent in agents[i].ToList())
             {
-                if (agent.state == AgentState.Idle ||
-                    agent.state == AgentState.Positioning)
+                //if (agent.state == AgentState.Idle ||
+                //    agent.state == AgentState.Positioning)
+                if (agent.state == AgentState.Locomotion)
                 {
-                    //RaycastHit? hit = CheckAgentLineOfSight(agent);
-                    //if (hit.HasValue)
-                    //{
-                    //    var hitInfo = (RaycastHit)hit;
-
-                    //    if (hitInfo.transform.tag == "Player")
-                    //    {
-                    //        AddToStrikersCandidateList(agent, i);
-                    //    }
-                    //}
-                    if (agent.hasGreenLightToTarget) //Se cuò manipolasse un bool in agent??? Così non deve rifare il controllo!
+                    if (agent.HasGreenLightToTheTarget())
                         AddToStrikersCandidateList(agent, i);
                 }                
             }
         }
     }
 
+    int PickRandoms()
+    {
+        int starting = 0;
+
+        var randomNumber = Random.Range(0, 101);
+        for (int i = 0; i < randomPercentage.Length; i++)
+        {
+            if (randomNumber > starting && randomNumber <= (starting + randomPercentage[i]))
+            {
+                return (i + 1);
+            }
+            starting += randomPercentage[i];
+        }
+        return 1;
+    }
+
     void PlanAttack()
     {
-        var randomNumber = Random.Range(1, maxEnemyCount + 1);
+        //var randomNumber = Random.Range(1, maxEnemyCount + 1);
+        var randomNumber = PickRandoms();
 
         for (int i = randomNumber; i > 0; i--)
         {
@@ -121,8 +130,7 @@ public class CombatDirector : MonoBehaviour
                     //candidate.RunForward(candidate.attackRange);
                     //TODO
                     //Fermare le coroutine in atto?
-                    candidate.StopAllCoroutines();
-                    candidate.hasGreenLightToTarget = false; //Serve davvero?
+                    //candidate.StopAllCoroutines();
                     candidate.fsm.State = candidate.dispatchingState;
                 }
 
@@ -130,39 +138,6 @@ public class CombatDirector : MonoBehaviour
                 return;
             }
         }
-    }
-
-    void RetreatNonStrikersFirstLine()
-    {
-        foreach (AgentAI agent in agents[1])
-        {
-            if (strikers.Contains(agent)) continue;
-            
-            //StartCoroutine(agent.PullBack(2)); //Pone il problema dell'avvisare al tizio dietro di levarsi dai coglioni!
-            agent.PullBack(2); //Pone il problema dell'avvisare al tizio dietro di levarsi dai coglioni!
-
-            //if (agent.state == AgentState.Idle)
-            //{
-            //    StartCoroutine(agent.PullBack1(2));
-            //}
-            //else
-            //if (agent.state == AgentState.Positioning)
-            //{
-            //    StartCoroutine(agent.BackToIdle1());
-            //    StartCoroutine(agent.PullBack1(2));
-            //}
-        }
-    }
-
-    public RaycastHit? CheckAgentLineOfSight(AgentAI agent)
-    {
-        Vector3 raycastOrigin = agent.transform.position + Vector3.up;
-        RaycastHit hitInfo;
-        if (Physics.SphereCast(raycastOrigin, agent.agentNM.radius, agent.transform.forward, out hitInfo, CombatDirector.DistanceInfo.LastLineRadius, agent.agentLineOfSightLM))
-        {
-            return hitInfo;
-        }
-        return null;
     }
 
     public static void UpdateAgentLists(AgentAI agent, int oldLine, int currentLine)
@@ -198,20 +173,6 @@ public class CombatDirector : MonoBehaviour
         }
     }
 
-    //void SetAgentsPriorityOrder()
-    //{
-    //    int timeStepDelta = 0;
-        
-    //    for (int i = 1; i < agents.Length; i++)
-    //    {
-    //        foreach (AgentAI agent in agents[i].ToList())
-    //        {
-    //            timeStepDelta++;
-    //            agent.idleState.priority = timeStepDelta;
-    //        }
-    //    }
-    //}
-
     void InitializeAgentLists()
     {
         agents = new List<AgentAI>[(distanceHandler.Lines + 2)]; //+2: +1 for line 0 and +1 for the line beyond the last one
@@ -230,20 +191,16 @@ public class CombatDirector : MonoBehaviour
         {
             strikersCandidates[i] = new List<AgentAI>();
         }
-    }
-
-
-    
+    }    
 
     void OnUpdateDispatch()
     {
-        Debug.Log("Numero strikers: " +strikers.Count);
         if (AllStrikersReady()) //EVENT
         {
             foreach (AgentAI agent in strikers)
             {
                 agent.fsm.State = agent.attackingState;
-                Debug.Log("Counter: " +agent.gameObject.name); //TODO verificare l'errore del false counter
+                //Debug.Log("Counter: " +agent.gameObject.name); //TODO verificare l'errore del false counter
             }
             strikeStartTime = Time.time;
             state = CombatDirectorState.Executing;
@@ -271,20 +228,4 @@ public class CombatDirector : MonoBehaviour
         }
         return true;
     }
-
-    //private void OnDrawGizmos()
-    //{
-    //    //Gizmos.color = Color.blue;
-    //    //for (int i = 0; i < Handler.Lines; i++)
-    //    //{
-    //    //    Gizmos.DrawWireSphere(Handler.Target.position, Handler.FirstLineDistance + Handler.LineToLineDistance * i);
-    //    //}
-
-    //    Gizmos.color = Color.blue;
-    //    for (int i = 0; i < distanceHandler.Lines; i++)
-    //    {
-    //        Gizmos.DrawWireSphere(distanceHandler.Target.position, distanceHandler.FirstLineDistance + distanceHandler.LineToLineDistance * i);
-    //    }
-    //}
-
 }

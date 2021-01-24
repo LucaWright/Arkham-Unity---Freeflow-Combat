@@ -251,11 +251,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &140062926
 Transform:
@@ -481,11 +481,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &344263709
 Transform:
@@ -632,11 +632,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &452737602
 Transform:
@@ -862,11 +862,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &536633858
 Transform:
@@ -934,11 +934,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &616255036
 Transform:
@@ -1085,11 +1085,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &627660294
 Transform:
@@ -1157,11 +1157,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &668725171
 Transform:
@@ -1387,11 +1387,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &787977362
 Transform:
@@ -1713,11 +1713,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &849599116
 Transform:
@@ -1771,11 +1771,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &854783829
 Transform:
@@ -1857,11 +1857,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &893177867
 Transform:
@@ -2260,11 +2260,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &1089915630
 Transform:
@@ -2332,11 +2332,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &1140019652
 Transform:
@@ -2483,11 +2483,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &1268202689
 Transform:
@@ -2713,11 +2713,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &1398475653
 Transform:
@@ -2864,11 +2864,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &1428884365
 Transform:
@@ -2936,11 +2936,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &1480564569
 Transform:
@@ -3087,11 +3087,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &1573454812
 Transform:
@@ -3554,11 +3554,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &1851157381
 Transform:
@@ -3626,11 +3626,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &1861644387
 Transform:
@@ -3698,11 +3698,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &1864548321
 Transform:
@@ -3770,11 +3770,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &1904546489
 Transform:
@@ -3888,11 +3888,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &2035779102
 Transform:
@@ -4039,11 +4039,11 @@ MonoBehaviour:
   avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
-  minMovementMagnitudue: 0.7
+  minMovementMagnitudue: 0.35
   interestMapWeights: []
   contextVectors: []
-  interestMap: []
   dangerMap: []
+  interestMap: []
   desiredDir: {x: 0, y: 0, z: 0}
 --- !u!4 &2103559297
 Transform:

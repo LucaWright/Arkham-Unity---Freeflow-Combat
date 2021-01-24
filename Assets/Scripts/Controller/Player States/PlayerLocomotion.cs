@@ -60,9 +60,6 @@ public class PlayerLocomotion : State
 
     void HandleMovement(float dampValue)
     {
-        //Animator animator = player.animator;
-        //int movingForwardHash = player.movingForwardHash;
-
         player.animator.SetFloat(player.movingForwardHash, transform.InverseTransformDirection(player.movementVector).z, dampValue, Time.fixedDeltaTime); //controllare come funziona il damp
         player.animator.SetFloat(player.movingRightHash, transform.InverseTransformDirection(player.movementVector).x, dampValue, Time.fixedDeltaTime); //rotation damp?
     }

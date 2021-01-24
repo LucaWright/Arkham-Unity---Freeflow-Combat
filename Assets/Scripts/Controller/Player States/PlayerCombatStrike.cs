@@ -9,6 +9,9 @@ public class PlayerCombatStrike : State
 {
     public PlayerCombatStrike(GameObject go, StateMachine fsm) : base(go, fsm) { }
 
+    public enum StrikeVersioning { mk1, mk2, mk3}
+    public StrikeVersioning version = StrikeVersioning.mk1;
+
     Player player;
     PlayerCombat combatState;
     CapsuleCollider capsuleCollider;
@@ -18,9 +21,9 @@ public class PlayerCombatStrike : State
 
     public AgentAI target;
 
-    public IAnimatedAction iAction;
+    //public IAnimatedAction iAction;
     public AnimatedAction action;
-    public IEnumerator anticipation;
+    public IEnumerator Anticipation;
 
     public float fow = 45f;
 
@@ -46,7 +49,8 @@ public class PlayerCombatStrike : State
     {
         go = this.gameObject;
         fsm = player.fsm;
-        //anticipation = action.Anticipation();
+        action.SetAction(this.transform);
+        Anticipation = action.Anticipation();
     }
 
     public override void OnEnter()
@@ -54,6 +58,7 @@ public class PlayerCombatStrike : State
         base.OnEnter();
         player.state = PlayerState.Strike;
         player.ResetMovementParameters();
+        player.animator.ResetTrigger("Strike Ender");
         if (FindTarget())
         {
             StartCoroutine(Strike());
@@ -66,14 +71,24 @@ public class PlayerCombatStrike : State
         }
     }
 
+    //FOR EDITOR ONLY!
+    public Vector3 DirFromAngle(float angle)
+    {
+        if (Application.isPlaying && player.movementVector != Vector3.zero)
+        {
+            return Quaternion.AngleAxis(angle, Vector3.up) * player.movementVector.normalized;
+        }
+        return Quaternion.AngleAxis(angle, Vector3.up) * transform.forward;
+    }
+
     bool FindTarget()
     {
         RaycastHit hitInfo;
         //SphereCastAll per dare la priorità a un eventuale avversario che non è a terra.
-        if (Physics.SphereCast(transform.position + Vector3.up, .75f, player.movementVector, out hitInfo, 20f, strikeLayerMask))
+        if (Physics.SphereCast(transform.position + Vector3.up, .25f, player.movementVector, out hitInfo, 20f, strikeLayerMask))
         {
             target = hitInfo.transform.GetComponent<AgentAI>();
-            Debug.Log("Now we are striking " + target.gameObject.name);
+            //Debug.Log("Now we are striking " + target.gameObject.name);
             return true;
         }
         else
@@ -97,7 +112,7 @@ public class PlayerCombatStrike : State
 
             if (thugCollider != null)
             {
-                Debug.Log(thugCollider.gameObject.name); //sospetto che hitti contro sé stesso
+                //Debug.Log(thugCollider.gameObject.name); //sospetto che hitti contro sé stesso
                 target = thugCollider.transform.GetComponent<AgentAI>();
                 return true;
             }
@@ -114,31 +129,76 @@ public class PlayerCombatStrike : State
     //Old method
     IEnumerator StrikeAnticipation()
     {
-        player.animator.SetTrigger("Strike");
-        OnStrikeStartFX.Invoke();
-
-        float easedValue = 0;
-        float attackPercentage = 0;
-
-        Vector3 startingAttackPosition = transform.position;
-        Vector3 vecToTarget = target.transform.position - player.transform.position;
-        Vector3 separator = -vecToTarget.normalized * stoppingDistance;
-
-        //IDEA: Gestire ritmo\distanza tramite animation curve!
-
-        //strikeImpulseForce = player.mass * (vecToTarget + separator) / (strikeBeat /** Time.fixedDeltaTime*/); //andrebbe puntata un po' in basso
-        strikeImpulseForce = (vecToTarget + separator) * strikeImpulseForceMagnitude;
-
-        //Handle rotation
-        transform.rotation = Quaternion.LookRotation(vecToTarget, Vector3.up);
-
-        while (attackPercentage / strikeBeat < 1)
+        switch (version)
         {
-            attackPercentage += Time.fixedDeltaTime;
-            easedValue = DOVirtual.EasedValue(0, 1, Mathf.Clamp01(attackPercentage / strikeBeat), strikeEase);
-            transform.position = Vector3.Lerp(startingAttackPosition, target.transform.position + separator, easedValue);
-            yield return new WaitForFixedUpdate();
-        }
+            case StrikeVersioning.mk1:
+                player.animator.SetTrigger("Strike");
+                OnStrikeStartFX.Invoke();
+
+                float easedValue = 0;
+                float attackPercentage = 0;
+
+                Vector3 startingAttackPosition = transform.position;
+                Vector3 vecToTarget = target.transform.position - player.transform.position;
+                Vector3 separator = -vecToTarget.normalized * stoppingDistance;
+
+                //IDEA: Gestire ritmo\distanza tramite animation curve!
+
+                //strikeImpulseForce = player.mass * (vecToTarget + separator) / (strikeBeat /** Time.fixedDeltaTime*/); //andrebbe puntata un po' in basso
+                strikeImpulseForce = (vecToTarget + separator) * strikeImpulseForceMagnitude;
+
+                //Handle rotation
+                transform.rotation = Quaternion.LookRotation(vecToTarget, Vector3.up);
+
+                while (attackPercentage / strikeBeat < 1)
+                {
+                    attackPercentage += Time.fixedDeltaTime;
+                    easedValue = DOVirtual.EasedValue(0, 1, Mathf.Clamp01(attackPercentage / strikeBeat), strikeEase);
+                    transform.position = Vector3.Lerp(startingAttackPosition, target.transform.position + separator, easedValue);
+                    //transform.Translate(Vector3.Lerp(startingAttackPosition, target.transform.position + separator, easedValue));
+                    yield return new WaitForFixedUpdate();
+                }
+                yield break;
+
+            case StrikeVersioning.mk2:
+                player.animator.SetTrigger("Strike");
+                //Target => Stop (specie se è striker) //DEVE FORZARLO IN IDLE!
+
+                easedValue = 0;
+                attackPercentage = 0;
+
+                startingAttackPosition = transform.position;
+                vecToTarget = target.transform.position - player.transform.position;
+                separator = -vecToTarget.normalized * stoppingDistance;
+
+                //Handle rotation
+                transform.rotation = Quaternion.LookRotation(vecToTarget, Vector3.up);
+
+                Vector3 distanceVector = vecToTarget + separator;
+                Time.timeScale = Mathf.Clamp(distanceVector.magnitude / strikeSpeed, .3f, 1f);
+
+                player.animator.updateMode = AnimatorUpdateMode.Normal;
+
+                while (attackPercentage / strikeBeat < 1)
+                {
+                    //attackPercentage += Time.fixedUnscaledDeltaTime;
+                    attackPercentage += Time.unscaledDeltaTime;
+                    easedValue = DOVirtual.EasedValue(0, 1, Mathf.Clamp01(attackPercentage / strikeBeat), strikeEase);
+
+                    //Creare un lerp tra oldPos e newPos che duri quanto FIXEDDELTATIME. Questo dovrebbe evitare quegli "scattini fastidiosi durante l'update)
+
+                    transform.position = Vector3.Lerp(startingAttackPosition, target.transform.position + separator, easedValue);
+                    //yield return new WaitForFixedUpdate();
+                    yield return new WaitForEndOfFrame();
+                }
+
+                player.animator.updateMode = AnimatorUpdateMode.AnimatePhysics;
+                yield break;
+            case StrikeVersioning.mk3:
+                break;
+            default:
+                break;
+        }        
     }
 
     ////NewMethod
@@ -205,6 +265,7 @@ public class PlayerCombatStrike : State
         player.input.northButton = false;
         Time.timeScale = 1;
         OnStrikeEndFX.Invoke();
+        
         //TODO
         //Una volta che c'è la recovery, queste devono essere messe (ad eccezione di stop all coroutines) a fine impact
         //Maaaaa... Mettere StopAllCoroutines come funzione base di State Enter PRIMA del passaggio di stato?

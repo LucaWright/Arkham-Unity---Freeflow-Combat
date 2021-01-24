@@ -70,10 +70,12 @@
     <Compile Include="Assets\Scripts\Controller\AI States\AIAttacking.cs" />
     <Compile Include="Assets\Scripts\Controller\AI States\AIDispatching.cs" />
     <Compile Include="Assets\Scripts\Controller\AI States\AIIdle.cs" />
+    <Compile Include="Assets\Scripts\Controller\AI States\AILocomotion.cs" />
     <Compile Include="Assets\Scripts\Controller\AI States\AIOnHit.cs" />
     <Compile Include="Assets\Scripts\Controller\AI States\AIOnStun.cs" />
     <Compile Include="Assets\Scripts\Controller\AI States\AIPositioning.cs" />
     <Compile Include="Assets\Scripts\Controller\AI States\AIRecover.cs" />
+    <Compile Include="Assets\Scripts\Controller\AI States\AIRepositioning.cs" />
     <Compile Include="Assets\Scripts\Controller\AI States\AIRetrat.cs" />
     <Compile Include="Assets\Scripts\Controller\AgentAI.cs" />
     <Compile Include="Assets\Scripts\Controller\Player States\PlayerCombat.cs" />
@@ -672,6 +674,9 @@
     </Reference>
     <Reference Include="Unity.Rider.Editor">
       <HintPath>C:/Users/Luca Wright/Documents/Arkham Unity - Freeflow Combat/Library/ScriptAssemblies/Unity.Rider.Editor.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.2D.Sprite.Editor">
+      <HintPath>C:/Users/Luca Wright/Documents/Arkham Unity - Freeflow Combat/Library/ScriptAssemblies/Unity.2D.Sprite.Editor.dll</HintPath>
     </Reference>
     <Reference Include="com.unity.cinemachine.editor">
       <HintPath>C:/Users/Luca Wright/Documents/Arkham Unity - Freeflow Combat/Library/ScriptAssemblies/com.unity.cinemachine.editor.dll</HintPath>

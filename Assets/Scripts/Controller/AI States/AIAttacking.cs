@@ -79,18 +79,7 @@ public class AIAttacking : State
 
     public void OnAttackAnimationEvent()
     {
-        //TODO
-        //Ho avuto un errore su questo reset path perché il navMesh non era attivo.
-        //Il trigger si è attivato nonostante l'animazione fosse stata fermata. È un problema che riscontro anche sul contrattacco. RISOLVERLO.
-        if (agentNM.isActiveAndEnabled)
-        {
-            agentNM.ResetPath();
-        }
-        else
-        {
-            agentNM.ResetPath();
-            Debug.Break(); //Per capire quando e come si verifica l'errore
-        }
+        if (agentAI.state != AgentState.Attacking) return; //Sembra che appena riattivo l'animator, vada avanti di un frame nell'animazione in corso. Ergo, rischia di attivare l'attack animation event anche se è a terra, causando il cambiamento di stato. Così dovrei prevenirlo. SOLUZIONE PEZZA! 
 
         RaycastHit hitInfo;
         if (Physics.Raycast(transform.position + Vector3.up, transform.forward, out hitInfo, attackRange))
@@ -106,8 +95,10 @@ public class AIAttacking : State
         }
         CombatDirector.strikers.Remove(agentAI);
         SetUICounterActive(false);
-        //StartCoroutine(agentAI.BackToIdle());
-        agentAI.BackToIdle();
+
+        agentAI.PullBack(2);
+        //fsm.State = agentAI.locomotionState;
+        //Lo obbliga ad andare in PullBack?
     }
 
     

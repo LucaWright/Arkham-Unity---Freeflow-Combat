@@ -13,14 +13,14 @@ GameObject:
   - component: {fileID: 6214707197724731361}
   - component: {fileID: 1345125791278471674}
   - component: {fileID: 1345125791278471673}
-  - component: {fileID: 3624647327916693803}
-  - component: {fileID: 1776141447904517599}
+  - component: {fileID: 566447434}
+  - component: {fileID: 1891768047}
   - component: {fileID: 8173296329018132955}
   - component: {fileID: 5685055962543400481}
-  - component: {fileID: 1891768047}
   - component: {fileID: 8867981796126607948}
   - component: {fileID: 4001777686141839741}
   - component: {fileID: 2036550982424224314}
+  - component: {fileID: 2629653383596435103}
   m_Layer: 8
   m_Name: Char_Thug
   m_TagString: Foe
@@ -111,8 +111,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   state: 0
   movementDir: 0
-  idleState: {fileID: 0}
-  positioningState: {fileID: 0}
+  locomotionState: {fileID: 0}
   dispatchingState: {fileID: 0}
   attackingState: {fileID: 0}
   retreatState: {fileID: 0}
@@ -123,14 +122,14 @@ MonoBehaviour:
   agentNM: {fileID: 0}
   animator: {fileID: 0}
   avoidanceCollider: {fileID: 0}
+  agentNMradius: 0
   idleHash: 0
   movingForwardHash: 0
   movingBackwardHash: 0
   movingRightHash: 0
   movingLeftHash: 0
-  runningForwardHash: 0
+  dispatchHash: 0
   stopHash: 0
-  agentNMradius: 0
   attackRange: 1.5
   agentLineOfSightLM:
     serializedVersion: 2
@@ -147,7 +146,9 @@ MonoBehaviour:
   impulseForce: {x: 0, y: 0, z: 0}
   hasGreenLightToTarget: 0
   averageVelocityVector: {x: 0, y: 0, z: 0}
---- !u!114 &3624647327916693803
+  desiredDir: {x: 0, y: 0, z: 0}
+  minMovementMagnitudue: 0.35
+--- !u!114 &566447434
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -156,17 +157,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 1345125791278471670}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2bf6ad80731f84a4aaebbec2ae427938, type: 3}
+  m_Script: {fileID: 11500000, guid: 99c0cf8052a1a324b88723476fcff950, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  positioningCheckTime: 0.25
-  lineOfSightLM:
-    serializedVersion: 2
-    m_Bits: 257
-  posEvaluationLM:
+  everyMinMaxSeconds: {x: 0.25, y: 0.35}
+  avoidanceMask:
     serializedVersion: 2
     m_Bits: 256
---- !u!114 &1776141447904517599
+  minMovementMagnitudue: 0.7
+  retreatTriggerAngleRange: 30
+  interestMapWeights: []
+  contextVectors: []
+  dangerMap: []
+  interestMap: []
+  desiredDir: {x: 0, y: 0, z: 0}
+--- !u!114 &1891768047
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -175,13 +180,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1345125791278471670}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0154c708b560f6d429a486b744805ee9, type: 3}
+  m_Script: {fileID: 11500000, guid: 19a086f16fc36a14cb14d8540b1d3e75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxSidestep: 2
-  lineOfSightLM:
-    serializedVersion: 2
-    m_Bits: 257
 --- !u!114 &8173296329018132955
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -227,18 +228,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &1891768047
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1345125791278471670}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 19a086f16fc36a14cb14d8540b1d3e75, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &8867981796126607948
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -268,6 +257,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b37d3ce5a3101984bbc8f0fb3d444fc8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  UI_stun: {fileID: 7207128222684728959, guid: 7d934b9cd58beac42b108d3e4445d7c6, type: 3}
+  stunTime: 3
 --- !u!114 &2036550982424224314
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -280,7 +271,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 402fb53ba05491143bbd800f466daa49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  UI_hit: {fileID: 7207128222684728959, guid: 7d934b9cd58beac42b108d3e4445d7c6, type: 3}
   hitExitTime: 3
+--- !u!114 &2629653383596435103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1345125791278471670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa60363647eee241b2e721fa7df944a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1345125790382412847
 PrefabInstance:
   m_ObjectHideFlags: 0

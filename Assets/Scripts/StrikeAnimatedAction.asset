@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba57973ebd0609b4b896746589870fe2, type: 3}
+  m_Name: StrikeAnimatedAction
+  m_EditorClassIdentifier: 
+  go: {fileID: 1163666189315361562, guid: 2e27a5da2fbbc0a498a496d843d1e719, type: 3}
+  player: {fileID: 0}
+  strikeImpulseForceMagnitude: 10
+  target: {fileID: 0}
+  fow: 45
+  strikeSpeed: 3
+  strikeBeat: 0.75
+  strikeEase: 1
+  strikeLayerMask:
+    serializedVersion: 2
+    m_Bits: 256
+  stoppingDistance: 0.75
+  hitPointRef: {fileID: 0}
+  OnStrikeStartFX:
+    m_PersistentCalls:
+      m_Calls: []
+  OnStrikeImpactFX:
+    m_PersistentCalls:
+      m_Calls: []
+  OnStrikeEndFX:
+    m_PersistentCalls:
+      m_Calls: []

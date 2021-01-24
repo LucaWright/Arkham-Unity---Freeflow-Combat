@@ -1,12 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class AIDispatching : State
+public class AIRepositioning : State
 {
-    public AIDispatching(GameObject go, StateMachine fsm) : base(go, fsm) { }
+    public AIRepositioning(GameObject go, StateMachine fsm) : base(go, fsm) { }
 
     AgentAI agentAI;
     Animator animator;
@@ -14,7 +13,7 @@ public class AIDispatching : State
     SphereCollider avoidanceCollider;
 
     int idleHash;
-    //int stopHash;
+    int stopHash;
 
     int dispatchHash;
     int readyHash;
@@ -30,7 +29,7 @@ public class AIDispatching : State
     }
 
     void Start()
-    {        
+    {
         go = this.gameObject;
         fsm = agentAI.fsm;
 
@@ -40,32 +39,29 @@ public class AIDispatching : State
         agentNM = agentAI.agentNM;
         avoidanceCollider = agentAI.avoidanceCollider;
 
-
         SetDispatchingHashParameters();
     }
 
     void SetDispatchingHashParameters()
     {
         idleHash = agentAI.idleHash;
-        //stopHash = agentAI.stopHash;
+        stopHash = agentAI.stopHash;
 
         dispatchHash = Animator.StringToHash("Dispatch");
-        readyHash = Animator.StringToHash("Ready");
-        canAttackHash = Animator.StringToHash("Can Attack");
+        stopHash = Animator.StringToHash("Stop");
     }
 
     public override void OnEnter()
     {
         base.OnEnter();
-        agentAI.state = AgentState.Dispatching;
-        stoppingDistance = agentAI.attackingState.attackRange; //vedere se e come utilizzarla
-        animator.ResetTrigger(readyHash); //Ogni tanto rimane qui. Lo faccio fare ad hit o, ancora meglio, qui. Così sono sicuro al 100%
-        agentAI.RunForward(stoppingDistance);
+        agentAI.state = AgentState.Repositioning;
+        //stoppingDistance = CombatDirector.DistanceInfo.LastLineRadius;
+        //agentAI.RunForward(stoppingDistance);
     }
 
     public override void OnUpdate()
     {
-        base.OnUpdate();        
+        base.OnUpdate();
     }
 
     public override void OnFixedUpdate()
@@ -80,22 +76,18 @@ public class AIDispatching : State
         if (!agentAI.NavMeshDestinationReached())
         {
             agentNM.SetDestination(agentAI.target.position);
-            agentAI.canAttack = false;
-            animator.SetBool(canAttackHash, agentAI.canAttack);
-            return;
         }
 
-        animator.SetTrigger(readyHash);
-        animator.SetBool(canAttackHash, agentAI.canAttack);
-        agentAI.movementDir = AgentMovementDir.None;
-        agentAI.canAttack = true;
+        if (agentAI.currentLine > CombatDirector.DistanceInfo.Lines) return;
+
+        animator.SetTrigger(stopHash);
+
+        fsm.State = agentAI.locomotionState;
     }
 
     public override void OnExit()
     {
         base.OnExit();
-        agentAI.canAttack = false;
-        animator.SetBool(canAttackHash, false);
-        animator.ResetTrigger(readyHash);
+        agentAI.ResetNavMeshPath();
     }
 }

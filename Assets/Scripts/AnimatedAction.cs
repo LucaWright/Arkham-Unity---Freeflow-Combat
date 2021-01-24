@@ -10,85 +10,85 @@ using UnityEngine.Events;
 [Serializable]
 public class AnimatedAction : ScriptableObject, IAnimatedAction
 {
-    /*//PROBLEMI
-    //1. Non ha referenza di player. Gliela devo passare io a mano.
-    //2. Gli event devono essere nello scriptable, non nel game object!
-    //3. Difficile fare tutto da una referenza generica!
-    Transform transform;
-    Animator animator;
+    public GameObject go;
 
+    Player player = null;
+    PlayerCombat combatState = null;
+    CapsuleCollider capsuleCollider = null;
+    public Transform transform = null;
+
+
+    public float strikeImpulseForceMagnitude = 10f;
+    Vector3 strikeImpulseForce;
+
+    public AgentAI target;
+
+    public float fow = 45f;
+
+    public float strikeSpeed = 3f;
+    public float strikeBeat = .75f;
+    public Ease strikeEase;
+    public LayerMask strikeLayerMask;
+    public float stoppingDistance = .75f;
+
+    public GameObject hitPointRef;
     public UnityEvent OnStrikeStartFX;
-    
-    public IEnumerator Anticipation()
+    public UnityEvent OnStrikeImpactFX;
+    public UnityEvent OnStrikeEndFX;
+
+    private void Awake()
     {
-        //animator.SetTrigger("Strike"); //L'animator può prenderlo per conto suo?
-        //OnStrikeStartFX.Invoke();
+        //player = go.GetComponent<Player>();
+        //combatState = go.GetComponent<PlayerCombat>();
+        //capsuleCollider = go.GetComponent<CapsuleCollider>();
+    }
 
-        //float easedValue = 0;
-        //float attackPercentage = 0;
+    public void SetAction(Transform playerTransform)
+    {
+        transform = playerTransform;
+    }
 
-        //Vector3 startingAttackPosition = transform.position;
-        //Vector3 vecToTarget = target.transform.position - transform.position;
-        //Vector3 separator = -vecToTarget.normalized * stoppingDistance;
+    public IEnumerator Anticipation() //vuole dei parametri in entrata. Ergo, transform suo, transform del target e animator. Su target dovrebbe addirittura fare get component. Non so, credo sia da abbandonare questa via.
+    {
+        player.animator.SetTrigger("Strike");
+        OnStrikeStartFX.Invoke();
 
-        //strikeImpulseForce = (vecToTarget + separator) * strikeImpulseForceMagnitude;
+        float easedValue = 0;
+        float attackPercentage = 0;
 
-        ////Handle rotation
-        //transform.rotation = Quaternion.LookRotation(vecToTarget, Vector3.up);
+        Vector3 startingAttackPosition = player.transform.position;
+        Vector3 vecToTarget = target.transform.position - player.transform.position;
+        Vector3 separator = -vecToTarget.normalized * stoppingDistance;
 
-        //while (attackPercentage / strikeBeat < 1)
-        //{
-        //    attackPercentage += Time.fixedDeltaTime;
-        //    easedValue = DOVirtual.EasedValue(0, 1, Mathf.Clamp01(attackPercentage / strikeBeat), strikeEase);
-        //    transform.position = Vector3.Lerp(startingAttackPosition, target.transform.position + separator, easedValue);
-        //    yield return new WaitForFixedUpdate();
-        //}
+        //IDEA: Gestire ritmo\distanza tramite animation curve!
+
+        //strikeImpulseForce = player.mass * (vecToTarget + separator) / (strikeBeat /** Time.fixedDeltaTime*/); //andrebbe puntata un po' in basso
+        strikeImpulseForce = (vecToTarget + separator) * strikeImpulseForceMagnitude;
+
+        //Handle rotation
+        player.transform.rotation = Quaternion.LookRotation(vecToTarget, Vector3.up);
+
+        while (attackPercentage / strikeBeat < 1)
+        {
+            attackPercentage += Time.fixedDeltaTime;
+            easedValue = DOVirtual.EasedValue(0, 1, Mathf.Clamp01(attackPercentage / strikeBeat), strikeEase);
+            player.transform.position = Vector3.Lerp(startingAttackPosition, target.transform.position + separator, easedValue);
+            yield return new WaitForFixedUpdate();
+        }
     }
 
     public IEnumerator Execution()
     {
-        throw new System.NotImplementedException();
+        yield break;
     }
 
     public IEnumerator Impact()
     {
-        ////STRIKE IMPACT
-        //player.animator.SetTrigger("Strike Ender");
-        //hitPointRef.transform.position = target.chestTransf.position; //compromesso
-
-        //target.OnHit(strikeImpulseForce);
-        //OnStrikeImpactFX.Invoke();
-        //yield return combatState.ImpactTimeFreeze(); //dovrebbe essere presa sempre dagli event
-
-        //player.input.westButton = false; //farglielo fare all'input manager? 
-        //player.input.northButton = false;
-
-        //OnStrikeEndFX.Invoke();
-
-        //fsm.State = player.combatState;
+        yield break;
     }
 
     public IEnumerator Recovery()
     {
-        throw new System.NotImplementedException();
-    }*/
-    public IEnumerator Anticipation()
-    {
-        throw new NotImplementedException();
-    }
-
-    public IEnumerator Execution()
-    {
-        throw new NotImplementedException();
-    }
-
-    public IEnumerator Impact()
-    {
-        throw new NotImplementedException();
-    }
-
-    public IEnumerator Recovery()
-    {
-        throw new NotImplementedException();
+        yield break;
     }
 }

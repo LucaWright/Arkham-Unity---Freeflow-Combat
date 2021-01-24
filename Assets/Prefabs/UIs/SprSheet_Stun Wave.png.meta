@@ -1,0 +1,779 @@
+fileFormatVersion: 2
+guid: 5c4518bb8c5e09449b39dae8ed67da3a
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6710926649771954595
+    second: SprSheet_Stun Wave_0
+  - first:
+      213: 1573555643260841858
+    second: SprSheet_Stun Wave_1
+  - first:
+      213: -4991134869800114887
+    second: SprSheet_Stun Wave_2
+  - first:
+      213: 8862911837850273036
+    second: SprSheet_Stun Wave_3
+  - first:
+      213: -4588492654104850361
+    second: SprSheet_Stun Wave_4
+  - first:
+      213: 1723231332023122815
+    second: SprSheet_Stun Wave_5
+  - first:
+      213: 6107042492570343250
+    second: SprSheet_Stun Wave_6
+  - first:
+      213: -6571489574626626588
+    second: SprSheet_Stun Wave_7
+  - first:
+      213: 7414349217132263777
+    second: SprSheet_Stun Wave_8
+  - first:
+      213: -8891656957402649649
+    second: SprSheet_Stun Wave_9
+  - first:
+      213: 8347621617388088041
+    second: SprSheet_Stun Wave_10
+  - first:
+      213: -6486786219500960583
+    second: SprSheet_Stun Wave_11
+  - first:
+      213: 5500334287137989415
+    second: SprSheet_Stun Wave_12
+  - first:
+      213: 1968904023571528035
+    second: SprSheet_Stun Wave_13
+  - first:
+      213: 7469161408526371986
+    second: SprSheet_Stun Wave_14
+  - first:
+      213: -3880832857920847733
+    second: SprSheet_Stun Wave_15
+  - first:
+      213: 3519125749381519374
+    second: SprSheet_Stun Wave_16
+  - first:
+      213: 463775414208901458
+    second: SprSheet_Stun Wave_17
+  - first:
+      213: 6713856262220317074
+    second: SprSheet_Stun Wave_18
+  - first:
+      213: -3713104035012313600
+    second: SprSheet_Stun Wave_19
+  - first:
+      213: -7766613492207096130
+    second: SprSheet_Stun Wave_20
+  - first:
+      213: 429194300267177381
+    second: SprSheet_Stun Wave_21
+  - first:
+      213: -1715825149178170185
+    second: SprSheet_Stun Wave_22
+  - first:
+      213: 3928166457631418910
+    second: SprSheet_Stun Wave_23
+  - first:
+      213: -8308752796597448592
+    second: SprSheet_Stun Wave_24
+  - first:
+      213: -8342279280176648002
+    second: SprSheet_Stun Wave_0
+  - first:
+      213: 7852586801932457119
+    second: SprSheet_Stun Wave_1
+  - first:
+      213: -8542032887757020822
+    second: SprSheet_Stun Wave_2
+  - first:
+      213: -6464649455338392502
+    second: SprSheet_Stun Wave_3
+  - first:
+      213: 6279161984883214330
+    second: SprSheet_Stun Wave_4
+  - first:
+      213: -4670360058393654339
+    second: SprSheet_Stun Wave_5
+  - first:
+      213: -8182275010865994337
+    second: SprSheet_Stun Wave_6
+  - first:
+      213: -2552534864145461137
+    second: SprSheet_Stun Wave_7
+  - first:
+      213: 6429369947239709960
+    second: SprSheet_Stun Wave_8
+  - first:
+      213: 2189334455788561187
+    second: SprSheet_Stun Wave_9
+  - first:
+      213: 7281860114560666643
+    second: SprSheet_Stun Wave_10
+  - first:
+      213: -3629213188122376178
+    second: SprSheet_Stun Wave_11
+  - first:
+      213: 6125173296816180665
+    second: SprSheet_Stun Wave_12
+  - first:
+      213: -7601260749428106018
+    second: SprSheet_Stun Wave_13
+  - first:
+      213: 9092586973491105247
+    second: SprSheet_Stun Wave_14
+  - first:
+      213: 3272201004547987994
+    second: SprSheet_Stun Wave_15
+  - first:
+      213: -6227984351698550328
+    second: SprSheet_Stun Wave_16
+  - first:
+      213: -6484327898775220096
+    second: SprSheet_Stun Wave_17
+  - first:
+      213: 2119451113414764025
+    second: SprSheet_Stun Wave_18
+  - first:
+      213: -3390303659271296261
+    second: SprSheet_Stun Wave_19
+  - first:
+      213: 5332764380909883885
+    second: SprSheet_Stun Wave_20
+  - first:
+      213: 4475402774646138516
+    second: SprSheet_Stun Wave_21
+  - first:
+      213: -8272088640681811441
+    second: SprSheet_Stun Wave_22
+  - first:
+      213: 5051949104879296157
+    second: SprSheet_Stun Wave_23
+  - first:
+      213: -3120523495265634554
+    second: SprSheet_Stun Wave_24
+  externalObjects: {}
+  serializedVersion: 11
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: -1
+    aniso: -1
+    mipBias: -100
+    wrapU: 1
+    wrapV: 1
+    wrapW: -1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  applyGammaDecoding: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_0
+      rect:
+        serializedVersion: 2
+        x: 56
+        y: 1848
+        width: 144
+        height: 144
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eb038f7a1354a3c80800000000000000
+      internalID: -8342279280176648002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_1
+      rect:
+        serializedVersion: 2
+        x: 308
+        y: 1844
+        width: 152
+        height: 152
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f94da11771ef9fc60800000000000000
+      internalID: 7852586801932457119
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_2
+      rect:
+        serializedVersion: 2
+        x: 560
+        y: 1840
+        width: 160
+        height: 160
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a61e981a85a947980800000000000000
+      internalID: -8542032887757020822
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_3
+      rect:
+        serializedVersion: 2
+        x: 812
+        y: 1836
+        width: 168
+        height: 168
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a44f1215293f846a0800000000000000
+      internalID: -6464649455338392502
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_4
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 1576
+        width: 176
+        height: 176
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: af7c91c8e80142750800000000000000
+      internalID: 6279161984883214330
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_5
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 1572
+        width: 184
+        height: 184
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dbb0642854c8f2fb0800000000000000
+      internalID: -4670360058393654339
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_6
+      rect:
+        serializedVersion: 2
+        x: 544
+        y: 1568
+        width: 192
+        height: 192
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f95e6caaa38b27e80800000000000000
+      internalID: -8182275010865994337
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_7
+      rect:
+        serializedVersion: 2
+        x: 796
+        y: 1564
+        width: 200
+        height: 200
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f605fc1a013939cd0800000000000000
+      internalID: -2552534864145461137
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_8
+      rect:
+        serializedVersion: 2
+        x: 24
+        y: 1304
+        width: 208
+        height: 208
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 80d7bca17e5b93950800000000000000
+      internalID: 6429369947239709960
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_9
+      rect:
+        serializedVersion: 2
+        x: 276
+        y: 1300
+        width: 216
+        height: 216
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 323ecc38614126e10800000000000000
+      internalID: 2189334455788561187
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_10
+      rect:
+        serializedVersion: 2
+        x: 528
+        y: 1296
+        width: 224
+        height: 224
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 31c4978713d5e0560800000000000000
+      internalID: 7281860114560666643
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_11
+      rect:
+        serializedVersion: 2
+        x: 780
+        y: 1292
+        width: 232
+        height: 232
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e088dc375d172adc0800000000000000
+      internalID: -3629213188122376178
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_12
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 1088
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9bdcf6039acf00550800000000000000
+      internalID: 6125173296816180665
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_13
+      rect:
+        serializedVersion: 2
+        x: 315
+        y: 1083
+        width: 138
+        height: 137
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: edcd7312f95e28690800000000000000
+      internalID: -7601260749428106018
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_14
+      rect:
+        serializedVersion: 2
+        x: 567
+        y: 1079
+        width: 146
+        height: 146
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fdd08448dab5f2e70800000000000000
+      internalID: 9092586973491105247
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_15
+      rect:
+        serializedVersion: 2
+        x: 818
+        y: 1074
+        width: 156
+        height: 156
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a1a52cd0a71396d20800000000000000
+      internalID: 3272201004547987994
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_16
+      rect:
+        serializedVersion: 2
+        x: 45
+        y: 813
+        width: 166
+        height: 165
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8c1015aba31c199a0800000000000000
+      internalID: -6227984351698550328
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_17
+      rect:
+        serializedVersion: 2
+        x: 296
+        y: 809
+        width: 176
+        height: 174
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 080195aa12a0306a0800000000000000
+      internalID: -6484327898775220096
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_18
+      rect:
+        serializedVersion: 2
+        x: 548
+        y: 804
+        width: 184
+        height: 184
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9f5a4edee8dc96d10800000000000000
+      internalID: 2119451113414764025
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_19
+      rect:
+        serializedVersion: 2
+        x: 799
+        y: 799
+        width: 194
+        height: 193
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bfa6d64d8c833f0d0800000000000000
+      internalID: -3390303659271296261
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_20
+      rect:
+        serializedVersion: 2
+        x: 27
+        y: 539
+        width: 202
+        height: 202
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: de15df243f8c10a40800000000000000
+      internalID: 5332764380909883885
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_21
+      rect:
+        serializedVersion: 2
+        x: 278
+        y: 534
+        width: 212
+        height: 212
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 496a491ac13db1e30800000000000000
+      internalID: 4475402774646138516
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_22
+      rect:
+        serializedVersion: 2
+        x: 529
+        y: 529
+        width: 222
+        height: 221
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f02ed9d6533a33d80800000000000000
+      internalID: -8272088640681811441
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_23
+      rect:
+        serializedVersion: 2
+        x: 781
+        y: 525
+        width: 230
+        height: 230
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d9edeabc1f02c1640800000000000000
+      internalID: 5051949104879296157
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SprSheet_Stun Wave_24
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 320
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6077e6f0a6ca1b4d0800000000000000
+      internalID: -3120523495265634554
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 7c8b7b23c14e1f243bc27e6e0298a53b
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+  spritePackingTag: 
+  pSDRemoveMatte: 0
+  pSDShowRemoveMatteOption: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

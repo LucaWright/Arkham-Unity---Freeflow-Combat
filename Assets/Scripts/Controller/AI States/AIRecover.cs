@@ -98,7 +98,7 @@ public class AIRecover : State
 
         EvaluateForward();
         //Debug.Break();
-        animator.enabled = true;
+        animator.enabled = true; //Deve in qualche modo stoppare l'animazione in corso prima della transizione?
 
         yield return new WaitForFixedUpdate();
 
@@ -166,15 +166,17 @@ public class AIRecover : State
         avoidanceCollider.radius = recoveryAgentNMradius;
         isRootMotionActive = true;
         //StartCoroutine(agentAI.BackToIdle());
-        agentAI.BackToIdle();
+        //agentAI.BackToIdle();
 
         while (!animator.IsInTransition(0))
         {
             yield return new WaitForFixedUpdate();
         }
-
+        //yield return new WaitForSeconds(1f);
         agentNM.radius = agentAI.agentNMradius;
         avoidanceCollider.radius = agentAI.agentNMradius;
+        fsm.State = agentAI.locomotionState;
+
     }
 
     public void EvaluateForward()

@@ -66,7 +66,7 @@ public class AIIdle : State
         //TUTTI GLI STATI DOVREBBERO AVERE UN CHECK IN, PERCHÉ È RESPONSABILITA' LORO REGOLARE LE PROPRIE LOGICHE INTERNE!
 
         //StartCoroutine(IdleCheckOut());
-        StartCoroutine(IdleCheckIn()); //NON FUNZIONA SE ENTRA DA SE' STESSA!
+        //StartCoroutine(IdleCheckIn()); //NON FUNZIONA SE ENTRA DA SE' STESSA!
     }
 
     public override void OnUpdate()
@@ -74,36 +74,36 @@ public class AIIdle : State
         base.OnUpdate();
     }
 
-    public override void OnFixedUpdate()
-    {
-        base.OnFixedUpdate();
-        agentAI.HandleRootMotionMovement();
-        agentAI.HandleRootMotionRotation();
-        if (!agentAI.IsValidLine())
-        {
-            StopAllCoroutines();
-            return; //Serve ancora? Davvero? Dato che Player è Character, conta anche lui nel calcolo dei soorundings. Anche sé... Quella funzione non verrebbe mai chiamata, se c'è via libera verso il player. Meglio tenerla.
-        }
+    //public override void OnFixedUpdate()
+    //{
+    //    base.OnFixedUpdate();
+    //    agentAI.HandleRootMotionMovement();
+    //    agentAI.HandleRootMotionRotation();
+    //    if (!agentAI.IsValidLine())
+    //    {
+    //        StopAllCoroutines();
+    //        return; //Serve ancora? Davvero? Dato che Player è Character, conta anche lui nel calcolo dei soorundings. Anche sé... Quella funzione non verrebbe mai chiamata, se c'è via libera verso il player. Meglio tenerla.
+    //    }
             
-        //TODO (test):
-        switch (CombatDirector.state)
-        {
-            case CombatDirectorState.Planning:
-                break;
-            case CombatDirectorState.Dispatching:
-                if (agentAI.currentLine == 1) //Così, però viene chiamata continuamente finché non esce da dispatching! TODO!
-                {
-                    if (CombatDirector.strikers.Contains(agentAI)) return; //TODO: da valutare! Teneral o meno? Sperimenta col nuovo sistema!
-                    //StartCoroutine(agentAI.PullBack(2));
-                    agentAI.PullBack(2);
-                }
-                break;
-            case CombatDirectorState.Executing:
-                break;
-            default:
-                break;
-        }
-    }
+    //    //TODO (test):
+    //    switch (CombatDirector.state)
+    //    {
+    //        case CombatDirectorState.Planning:
+    //            break;
+    //        case CombatDirectorState.Dispatching:
+    //            if (agentAI.currentLine == 1) //Così, però viene chiamata continuamente finché non esce da dispatching! TODO!
+    //            {
+    //                if (CombatDirector.strikers.Contains(agentAI)) return; //TODO: da valutare! Teneral o meno? Sperimenta col nuovo sistema!
+    //                //StartCoroutine(agentAI.PullBack(2));
+    //                agentAI.PullBack(2);
+    //            }
+    //            break;
+    //        case CombatDirectorState.Executing:
+    //            break;
+    //        default:
+    //            break;
+    //    }
+    //}
 
     //TODO
     //Funzione emergenza OnCollisionEnter
@@ -119,49 +119,49 @@ public class AIIdle : State
         StopAllCoroutines();
     }
 
-    IEnumerator IdleCheckIn()
-    {
-        yield return new WaitForEndOfFrame();
-        StartCoroutine(IdleCheckInFromSelf());
-        while (!animator.IsInTransition(0))
-        {
-            yield return new WaitForFixedUpdate();
-        }
-        yield return new WaitForSeconds(animator.GetAnimatorTransitionInfo(0).duration);
-        StartCoroutine(IdleCheckOut());
-    }
-    IEnumerator IdleCheckInFromSelf()
-    {
-        var clipLength = animator.GetCurrentAnimatorClipInfo(0)[0].clip.length;
-        //yield return new WaitForSeconds(clipLength);
-        yield return new WaitForSeconds(3f);
-        StopCoroutine(IdleCheckIn());
-        StartCoroutine(IdleCheckOut());
-    }
+    //IEnumerator IdleCheckIn()
+    //{
+    //    yield return new WaitForEndOfFrame();
+    //    StartCoroutine(IdleCheckInFromSelf());
+    //    while (!animator.IsInTransition(0))
+    //    {
+    //        yield return new WaitForFixedUpdate();
+    //    }
+    //    yield return new WaitForSeconds(animator.GetAnimatorTransitionInfo(0).duration);
+    //    StartCoroutine(IdleCheckOut());
+    //}
+    //IEnumerator IdleCheckInFromSelf()
+    //{
+    //    var clipLength = animator.GetCurrentAnimatorClipInfo(0)[0].clip.length;
+    //    //yield return new WaitForSeconds(clipLength);
+    //    yield return new WaitForSeconds(3f);
+    //    StopCoroutine(IdleCheckIn());
+    //    StartCoroutine(IdleCheckOut());
+    //}
 
-    IEnumerator IdleCheckOut()
-    {
-        yield return new WaitForSeconds(positioningCheckTime);
-        animator.ResetTrigger(idleHash); //Security Check
-        if (agentAI.HasGreenLightToTheTarget())
-        {
-            EvaluatePushForward();
-            yield break;
-        }
-        agentAI.CheckSurroundings();
-        StartCoroutine(IdleCheckOut());
-    }
+    //IEnumerator IdleCheckOut()
+    //{
+    //    yield return new WaitForSeconds(positioningCheckTime);
+    //    animator.ResetTrigger(idleHash); //Security Check
+    //    if (agentAI.HasGreenLightToTheTarget())
+    //    {
+    //        EvaluatePushForward();
+    //        yield break;
+    //    }
+    //    agentAI.CheckSurroundings();
+    //    StartCoroutine(IdleCheckOut());
+    //}
 
-    void EvaluatePushForward() //ATTENZIONE! Se richiama sé stessa, non esce più dal checkin!
-    {
-        if (agentAI.currentLine == 1) //Con questo controllo, continua il ciclo
-        {
-            StartCoroutine(IdleCheckOut());
-            return;
-        }
-        //StartCoroutine(agentAI.PushForward(1));
-        agentAI.PushForward(1);
-    }
+    //void EvaluatePushForward() //ATTENZIONE! Se richiama sé stessa, non esce più dal checkin!
+    //{
+    //    if (agentAI.currentLine == 1) //Con questo controllo, continua il ciclo
+    //    {
+    //        StartCoroutine(IdleCheckOut());
+    //        return;
+    //    }
+    //    //StartCoroutine(agentAI.PushForward(1));
+    //    agentAI.PushForward(1);
+    //}
 
     private void OnDrawGizmosSelected()
     {

@@ -38,7 +38,7 @@ public class Player : MonoBehaviour
 
     [HideInInspector] public float multicounterCount;
 
-    [HideInInspector] public Vector3     movementVector;
+    [HideInInspector] public Vector3     movementVector = Vector3.zero;
 
     private void Awake()
     {
@@ -74,18 +74,19 @@ public class Player : MonoBehaviour
         fsm = new StateMachine();
 
         //idleState = GetComponent<PlayerIdle>();
+        //Metti in uno scriptable? {
         locomotionState = GetComponent<PlayerLocomotion>();
         combatState = GetComponent<PlayerCombat>();
         combatStrike = GetComponent<PlayerCombatStrike>();
         combatCounter = GetComponent<PlayerCombatCounter>();
         hitState = GetComponent<PlayerOnHit>();
+        //}
 
         fsm.State = locomotionState;        
     }
 
     private void Update()
     {
-        //if (state == playerState.Hit) return;
         SetMovementVector();
         fsm.State.OnUpdate();
     }
@@ -97,8 +98,7 @@ public class Player : MonoBehaviour
 
     public void SetMovementVector()
     {
-        //Vector3 forward = Vector3.ProjectOnPlane(Camera.main.transform.forward, Vector3.up).normalized;
-        //Vector3 right = Vector3.Cross(Vector3.up, forward);
+        //La differenza con IA è che non deve essere rielaborato secondo la camera        
         Vector3 forward = cam.transform.forward;
         Vector3 right = cam.transform.right;
 

@@ -22,8 +22,8 @@ public class CrowdTestScript : MonoBehaviour
 
     public float[] interestMapWeights;
     public Vector3[] contextVectors;
-    public float[] interestMap;
     public float[] dangerMap;
+    public float[] interestMap;
 
     public Vector3 desiredDir;
 
@@ -40,8 +40,8 @@ public class CrowdTestScript : MonoBehaviour
         {
             Vector3.forward,
             Vector3.right,
-            - Vector3.right,
-            - Vector3.forward
+            Vector3.left,
+            Vector3.back
         };
         interestMapWeights = new float[]
         {
@@ -112,7 +112,7 @@ public class CrowdTestScript : MonoBehaviour
     {
         for (int  i = 0;  i < contextVectors.Length;  i++)
         {
-            float dot = Vector3.Dot(distanceVector, WorldToLocalDir(contextVectors[i]));
+            float dot = Vector3.Dot(distanceVector.normalized, WorldToLocalDir(contextVectors[i])); //il dot non dà 1. Perché il vettore non è normalizzato???
             //Check if OVERRIDE!
             if (i == 0)
             {
@@ -124,13 +124,15 @@ public class CrowdTestScript : MonoBehaviour
                     return;
                 }
             }
-            //if (isOverriding)
+            //if (dot > 0)
             //{
-            //    Debug.Log("C'è entrata lo stesso dopo il break");
+            //    //Anzichè sommare... vedere se è più alto di quello già storato?
+            //    dangerMap[i] += dot;
             //}
-            if (dot > 0)
+            if (dot > dangerMap[i])
             {
-                dangerMap[i] += Vector3.Dot(distanceVector, WorldToLocalDir(contextVectors[i])); //TODO DARE DEI PESI IN BASE A DISTANZA?
+                //Anzichè sommare... vedere se è più alto di quello già storato?
+                dangerMap[i] = dot;
             }
         }
     }
@@ -169,7 +171,6 @@ public class CrowdTestScript : MonoBehaviour
     {
         if (isOverriding)
         {
-            Debug.Log("Sono entrata!");
             isOverriding = false;
         }
         Quaternion lookAt = Quaternion.LookRotation(reference.position - transform.position, Vector3.up);

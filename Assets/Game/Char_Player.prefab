@@ -385,6 +385,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   strikeImpulseForceMagnitude: 3000
   target: {fileID: 0}
+  action: {fileID: 0}
   fow: 45
   strikeSpeed: 3
   strikeBeat: 0.75
@@ -495,7 +496,7 @@ MonoBehaviour:
   counterImpulseForceMagnitude: 10000
   counterBeat: 0.75
   counterMaxRange: 2.5
-  easeDistance: 1.1
+  easeDistance: 1.25
   counterEase: 1
   counterHurtRaycastLength: 1
   counterLayerMask:
