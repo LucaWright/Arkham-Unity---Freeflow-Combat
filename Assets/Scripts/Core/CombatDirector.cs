@@ -46,6 +46,13 @@ public class CombatDirector : MonoBehaviour
 
     IEnumerator Tick()
     {
+        /*TODO:
+        Le cose devono cambiare un po'.
+        1. Un parametro di intensità (magari modificabile da UI)
+        2. Il random diventa pseudo-random. Il gioco tiene conto di N ondate precedenti e può forzare il risultato del random di intensità.
+        3. Cosa simile per quanto riguarda in numero di scagnozzi che partono.
+        4. Fare un test in cui si parte dalla linea più esterna fino a quella più interna.
+        */
         yield return new WaitForEndOfFrame();
         //TODO: FIND!
         //agents = agents.OrderBy(x => (this.transform.position - distanceHandler.Target.transform.position).sqrMagnitude);

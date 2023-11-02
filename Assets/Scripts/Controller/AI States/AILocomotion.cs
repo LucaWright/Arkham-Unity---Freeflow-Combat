@@ -97,7 +97,7 @@ public class AILocomotion : State
                 }
                 break;
             case CombatDirectorState.Executing:
-                if (!CombatDirector.strikers.Contains(agentAI) && agentAI.currentLine == 1)
+                if (!CombatDirector.strikers.Contains(agentAI) && agentAI.currentLine <= 1)
                 {
                     contextMap = Context.PullBack;
                 }
@@ -254,19 +254,23 @@ public class AILocomotion : State
                 desiredDir = (contextVectors[index] * interestMap[index]).sqrMagnitude >= Mathf.Pow(minMovementMagnitude, 2) ?
                              contextVectors[index] : Vector3.zero;
                 break;
-            case Context.PullBack:
-                index = HighestIndex(dangerMap);
-                //Debug.DrawRay(transform.position + Vector3.up, WorldToLocalDir( - contextVectors[index]) * dangerMap[index], Color.blue, .02f);
-                desiredDir = ( - contextVectors[index] * dangerMap[index]).sqrMagnitude >= Mathf.Pow(minMovementMagnitude, 2) ?
-                             - contextVectors[index] : Vector3.zero;
-                break;
-            case Context.Sidestep:
+            //case Context.PullBack:
+            //    index = HighestIndex(dangerMap);
+            //    //Debug.DrawRay(transform.position + Vector3.up, WorldToLocalDir( - contextVectors[index]) * dangerMap[index], Color.blue, .02f);
+            //    desiredDir = ( - contextVectors[index] * dangerMap[index]).sqrMagnitude >= Mathf.Pow(minMovementMagnitude, 2) ?
+            //                 - contextVectors[index] : Vector3.zero;
+            //    break;
+            //case Context.Sidestep:
+            //    index = HighestIndex(dangerMap);
+            //    //Debug.DrawRay(transform.position + Vector3.up, WorldToLocalDir(-contextVectors[index]) * dangerMap[index], Color.blue, .02f);
+            //    desiredDir = (-contextVectors[index] * dangerMap[index]).sqrMagnitude >= Mathf.Pow(minMovementMagnitude, 2) ?
+            //                 -contextVectors[index] : Vector3.zero;
+            //    break;
+            default:
                 index = HighestIndex(dangerMap);
                 //Debug.DrawRay(transform.position + Vector3.up, WorldToLocalDir(-contextVectors[index]) * dangerMap[index], Color.blue, .02f);
                 desiredDir = (-contextVectors[index] * dangerMap[index]).sqrMagnitude >= Mathf.Pow(minMovementMagnitude, 2) ?
                              -contextVectors[index] : Vector3.zero;
-                break;
-            default:
                 break;
         }             
 
@@ -297,7 +301,7 @@ public class AILocomotion : State
         }
     }
 
-    int HighestIndex(float[] map)
+    int HighestIndex(float[] map) //Cin lamba experession + linq?
     {
         float interest = 0f;
         int index = 0;

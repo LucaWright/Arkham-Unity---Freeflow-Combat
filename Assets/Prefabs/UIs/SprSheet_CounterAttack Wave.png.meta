@@ -78,7 +78,7 @@ TextureImporter:
       213: 4773773600396054368
     second: CounterAttack Wave_24
   externalObjects: {}
-  serializedVersion: 11
+  serializedVersion: 12
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -95,9 +95,12 @@ TextureImporter:
     externalNormalMap: 0
     heightScale: 0.25
     normalMapFilter: 0
+    flipGreenChannel: 0
   isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -106,12 +109,12 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: -1
-    aniso: -1
-    mipBias: -100
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
     wrapU: 1
     wrapV: 1
-    wrapW: -1
+    wrapW: 0
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
@@ -129,10 +132,15 @@ TextureImporter:
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
   maxTextureSizeSet: 0
   compressionQualitySet: 0
   textureFormatSet: 0
+  ignorePngGamma: 0
   applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 1
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
@@ -144,6 +152,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -156,6 +165,20 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Server
+    maxTextureSize: 512
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
@@ -696,9 +719,34 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-  spritePackingTag: 
+    nameFileIdTable:
+      CounterAttack Wave_0: 7787363155301406448
+      CounterAttack Wave_1: -4767751649855797542
+      CounterAttack Wave_10: 3908180929007762951
+      CounterAttack Wave_11: 4295644963801766258
+      CounterAttack Wave_12: 6404641137907244143
+      CounterAttack Wave_13: -4385888962678633737
+      CounterAttack Wave_14: -3944333401016325188
+      CounterAttack Wave_15: -3306808597295130598
+      CounterAttack Wave_16: 728573006326796487
+      CounterAttack Wave_17: -1692043645171235765
+      CounterAttack Wave_18: 1033468319305911994
+      CounterAttack Wave_19: 1675340539267266746
+      CounterAttack Wave_2: 722562098041572909
+      CounterAttack Wave_20: -4689608284556602507
+      CounterAttack Wave_21: -1332092140102535456
+      CounterAttack Wave_22: -1586597742761431910
+      CounterAttack Wave_23: -7203112212245270546
+      CounterAttack Wave_24: 4773773600396054368
+      CounterAttack Wave_3: -3480950235680540002
+      CounterAttack Wave_4: 2276241325214887905
+      CounterAttack Wave_5: 1526859545257372857
+      CounterAttack Wave_6: -4258600043128660914
+      CounterAttack Wave_7: 4800888136845238894
+      CounterAttack Wave_8: 6438933015355162082
+      CounterAttack Wave_9: 2783128409466292647
+  mipmapLimitGroupName: 
   pSDRemoveMatte: 0
-  pSDShowRemoveMatteOption: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 

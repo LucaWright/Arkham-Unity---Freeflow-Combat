@@ -101,7 +101,7 @@ public class PlayerCombatStrike : State
             capsuleCollider.enabled = true;
             foreach (Collider collider in thugColliders)
             {
-                float angle = Vector3.Angle(player.movementVector, collider.transform.position);
+                float angle = Vector3.Angle(player.movementVector, collider.transform.position - transform.position);
 
                 if (angle < refAngle)
                 {
